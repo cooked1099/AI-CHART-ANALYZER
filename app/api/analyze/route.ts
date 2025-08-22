@@ -11,8 +11,9 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('file') as File
 
+    console.log('File received:', file?.name, file?.type, file?.size)
+
     if (!file) {
-      // Return default analysis instead of error
       return NextResponse.json({
         success: true,
         analysis: {
@@ -29,25 +30,57 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes)
     const base64Image = buffer.toString('base64')
 
-    // Create the analysis prompt
+    console.log('Image converted to base64, length:', base64Image.length)
+
+    // Create a much more detailed and specific analysis prompt
     const analysisPrompt = `
-    Analyze this trading chart screenshot and provide the following information in the exact format specified:
+    You are an expert trading chart analyst. Analyze this trading chart screenshot very carefully and provide accurate information.
 
-    1. PAIR: Detect the trading pair (e.g., BTC/USDT, EUR/USD, ETH/BTC, etc.)
-    2. TIMEFRAME: Detect the timeframe from chart labels (e.g., M1, M5, M15, M30, H1, H4, D1, W1, MN)
-    3. TREND: Analyze the overall trend based on price action and indicators (Bullish, Bearish, or Sideways)
-    4. SIGNAL: Predict the next candle direction based on current patterns and indicators (UP or DOWN)
+    LOOK FOR THESE SPECIFIC ELEMENTS:
 
-    IMPORTANT: Return ONLY the result in this exact format:
-    PAIR: "[detected pair]"
-    TIMEFRAME: "[detected timeframe]"
-    TREND: "[Bullish/Bearish/Sideways]"
-    SIGNAL: "[UP/DOWN]"
+    1. PAIR: 
+       - Look for the trading pair name in the chart header, title, or corner
+       - Common formats: BTC/USDT, EUR/USD, USD/MXN, GBP/USD, etc.
+       - For Quotex charts, look for pairs like "USD/MXN (OTC)", "EUR/USD", etc.
+       - If you see "USD?MXN (OTC)", return "USD/MXN (OTC)"
+       - Be very precise with the exact pair name you see
 
-    If you cannot detect any of these elements, use "Unknown" for that field.
+    2. TIMEFRAME:
+       - Look for timeframe indicators like M1, M5, M15, M30, H1, H4, D1, W1, MN
+       - Check the chart toolbar, buttons, or time selector
+       - For Quotex, common timeframes are M1, M5, M15, M30, H1, H4, D1
+       - Look carefully at the x-axis labels or chart settings
+
+    3. TREND:
+       - Analyze the overall price direction and movement
+       - Look at candlestick patterns, moving averages, and price action
+       - Bullish: Price is generally moving upward
+       - Bearish: Price is generally moving downward  
+       - Sideways: Price is moving horizontally with no clear direction
+
+    4. SIGNAL:
+       - Based on current chart patterns, predict the next candle direction
+       - Look at recent candlestick patterns, support/resistance levels
+       - UP: Expect the next candle to be green/bullish
+       - DOWN: Expect the next candle to be red/bearish
+
+    IMPORTANT INSTRUCTIONS:
+    - Look very carefully at the chart - don't guess
+    - If you can see the information clearly, use the exact values
+    - Only use "Unknown" if you genuinely cannot see the information
+    - For Quotex charts, pay special attention to the pair name format
+    - Be precise with timeframe detection from the chart interface
+
+    Return ONLY the result in this exact format:
+    PAIR: "[exact pair name you see]"
+    TIMEFRAME: "[exact timeframe you see]"
+    TREND: "[Bullish/Bearish/Sideways based on chart analysis]"
+    SIGNAL: "[UP/DOWN based on current patterns]"
     `
 
-    // Call OpenAI Vision API
+    console.log('Sending request to OpenAI...')
+
+    // Call OpenAI Vision API with higher token limit for better analysis
     const response = await openai.chat.completions.create({
       model: "gpt-4-vision-preview",
       messages: [
@@ -67,13 +100,16 @@ export async function POST(request: NextRequest) {
           ]
         }
       ],
-      max_tokens: 300,
+      max_tokens: 500,
+      temperature: 0.1, // Lower temperature for more consistent results
     })
 
     const analysisResult = response.choices[0]?.message?.content
 
+    console.log('AI Response:', analysisResult)
+
     if (!analysisResult) {
-      // Return default analysis if AI fails
+      console.log('No AI response received, using defaults')
       return NextResponse.json({
         success: true,
         analysis: {
@@ -81,7 +117,8 @@ export async function POST(request: NextRequest) {
           TIMEFRAME: 'H1',
           TREND: 'Bullish',
           SIGNAL: 'UP'
-        }
+        },
+        debug: 'No AI response'
       })
     }
 
@@ -96,10 +133,15 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Ensure we have all required fields with defaults
+    console.log('Parsed Result:', result)
+
+    // Only use defaults if the AI truly couldn't detect something
     const requiredFields = ['PAIR', 'TIMEFRAME', 'TREND', 'SIGNAL']
+    let usedDefaults = false
+    
     requiredFields.forEach(field => {
-      if (!result[field] || result[field] === 'Unknown') {
+      if (!result[field] || result[field] === 'Unknown' || result[field] === '') {
+        usedDefaults = true
         switch (field) {
           case 'PAIR':
             result[field] = 'BTC/USDT'
@@ -117,16 +159,22 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('Final Result:', result, 'Used defaults:', usedDefaults)
+
     return NextResponse.json({
       success: true,
       analysis: result,
-      rawResponse: analysisResult
+      rawResponse: analysisResult,
+      debug: {
+        usedDefaults,
+        originalResponse: analysisResult,
+        parsedResult: result
+      }
     })
 
   } catch (error) {
     console.error('Analysis error:', error)
     
-    // Always return a successful result, never an error
     return NextResponse.json({
       success: true,
       analysis: {
@@ -134,7 +182,8 @@ export async function POST(request: NextRequest) {
         TIMEFRAME: 'H1',
         TREND: 'Bullish',
         SIGNAL: 'UP'
-      }
+      },
+      debug: 'Error occurred: ' + (error instanceof Error ? error.message : 'Unknown error')
     })
   }
 }

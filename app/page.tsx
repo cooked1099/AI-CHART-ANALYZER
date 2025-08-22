@@ -14,14 +14,22 @@ interface AnalysisData {
   SIGNAL: string
 }
 
+interface DebugInfo {
+  usedDefaults?: boolean
+  originalResponse?: string
+  parsedResult?: any
+}
+
 type AppState = 'upload' | 'loading' | 'result'
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('upload')
   const [analysisResult, setAnalysisResult] = useState<AnalysisData | null>(null)
+  const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
 
   const handleFileSelect = async (file: File) => {
     setAppState('loading')
+    setDebugInfo(null)
 
     try {
       const formData = new FormData()
@@ -37,6 +45,7 @@ export default function Home() {
       // Always treat as success - no error handling
       if (data.analysis) {
         setAnalysisResult(data.analysis)
+        setDebugInfo(data.debug || null)
       } else {
         // Create a default analysis if none provided
         setAnalysisResult({
@@ -45,6 +54,7 @@ export default function Home() {
           TREND: 'Bullish',
           SIGNAL: 'UP'
         })
+        setDebugInfo({ usedDefaults: true, originalResponse: 'No analysis provided' })
       }
       
       setAppState('result')
@@ -56,6 +66,7 @@ export default function Home() {
         TREND: 'Bullish',
         SIGNAL: 'UP'
       })
+      setDebugInfo({ usedDefaults: true, originalResponse: 'Error occurred' })
       setAppState('result')
     }
   }
@@ -63,6 +74,7 @@ export default function Home() {
   const handleNewAnalysis = () => {
     setAppState('upload')
     setAnalysisResult(null)
+    setDebugInfo(null)
   }
 
   return (
@@ -154,11 +166,48 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
+                  className="space-y-6"
                 >
                   <AnalysisResult 
                     analysis={analysisResult} 
                     onNewAnalysis={handleNewAnalysis} 
                   />
+                  
+                  {/* Debug Information */}
+                  {debugInfo && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                      className="glassmorphism rounded-xl p-6"
+                    >
+                      <h3 className="text-lg font-semibold text-white mb-4">Debug Information</h3>
+                      <div className="space-y-3 text-sm">
+                        <div>
+                          <span className="text-white/70">Used Defaults:</span>
+                          <span className={`ml-2 ${debugInfo.usedDefaults ? 'text-trading-red' : 'text-trading-green'}`}>
+                            {debugInfo.usedDefaults ? 'Yes' : 'No'}
+                          </span>
+                        </div>
+                        {debugInfo.originalResponse && (
+                          <div>
+                            <span className="text-white/70">AI Response:</span>
+                            <div className="mt-1 p-3 bg-black/20 rounded text-white/90 font-mono text-xs">
+                              {debugInfo.originalResponse}
+                            </div>
+                          </div>
+                        )}
+                        {debugInfo.parsedResult && (
+                          <div>
+                            <span className="text-white/70">Parsed Result:</span>
+                            <div className="mt-1 p-3 bg-black/20 rounded text-white/90 font-mono text-xs">
+                              {JSON.stringify(debugInfo.parsedResult, null, 2)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
