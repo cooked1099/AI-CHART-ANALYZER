@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { Upload, X, Image as ImageIcon, Sparkles, Zap } from 'lucide-react'
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void
@@ -63,7 +63,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       <AnimatePresence mode="wait">
         {!selectedFile ? (
           <motion.div
@@ -72,9 +72,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className={`relative upload-area glassmorphism rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 ${
-              isDragOver ? 'dragover' : ''
-            } ${isLoading ? 'pointer-events-none opacity-50' : ''}`}
+            className={`relative upload-area glassmorphism-strong rounded-3xl p-12 text-center cursor-pointer transition-all duration-500 ${
+              isDragOver ? 'dragover scale-105' : ''
+            } ${isLoading ? 'pointer-events-none opacity-50' : 'hover:scale-105'}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -89,41 +89,94 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
               disabled={isLoading}
             />
             
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 rounded-3xl overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-500/5 to-cyan-500/5"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-purple-400/10 to-cyan-400/10 rounded-full blur-3xl animate-pulse"></div>
+            </div>
+
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="flex flex-col items-center space-y-4"
+              className="relative z-10 flex flex-col items-center space-y-6"
             >
-              <div className="relative">
-                <Upload 
-                  size={48} 
-                  className={`transition-colors duration-300 ${
-                    isDragOver ? 'text-trading-green' : 'text-white/70'
-                  }`} 
-                />
-                {isDragOver && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute inset-0 bg-trading-green/20 rounded-full"
-                    style={{ width: '48px', height: '48px' }}
-                  />
-                )}
+              {/* Main Upload Icon */}
+              <motion.div
+                animate={{ 
+                  y: isDragOver ? -10 : 0,
+                  scale: isDragOver ? 1.1 : 1
+                }}
+                transition={{ duration: 0.3 }}
+                className="relative"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-3xl blur-xl opacity-30"></div>
+                <div className="relative bg-gradient-to-r from-purple-500 to-cyan-500 p-6 rounded-3xl">
+                  <Upload size={48} className="text-white" />
+                </div>
+              </motion.div>
+
+              {/* Title and Description */}
+              <div className="space-y-4">
+                <motion.h2 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="text-3xl md:text-4xl font-bold text-white"
+                >
+                  Upload Trading Chart
+                </motion.h2>
+                
+                <motion.p 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="text-lg text-white/70 max-w-2xl mx-auto leading-relaxed"
+                >
+                  Drag and drop your trading chart screenshot here, or click to browse
+                </motion.p>
               </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold text-white">
-                  {isDragOver ? 'Drop your chart here' : 'Upload Trading Chart'}
-                </h3>
-                <p className="text-white/70 text-sm">
-                  Drag and drop your chart screenshot here, or click to browse
-                </p>
-                <p className="text-white/50 text-xs">
-                  Supports PNG, JPG • Max 10MB
-                </p>
-              </div>
+
+              {/* Features List */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto"
+              >
+                <div className="flex items-center space-x-3 text-white/80">
+                  <Sparkles size={20} className="text-cyan-300" />
+                  <span className="text-sm">AI-Powered Analysis</span>
+                </div>
+                <div className="flex items-center space-x-3 text-white/80">
+                  <Zap size={20} className="text-purple-300" />
+                  <span className="text-sm">Instant Results</span>
+                </div>
+                <div className="flex items-center space-x-3 text-white/80">
+                  <ImageIcon size={20} className="text-green-300" />
+                  <span className="text-sm">PNG, JPG Support</span>
+                </div>
+              </motion.div>
+
+              {/* Upload Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                Choose File
+              </motion.button>
             </motion.div>
+
+            {/* Drag Over Effect */}
+            {isDragOver && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl border-2 border-dashed border-white/50"
+              />
+            )}
           </motion.div>
         ) : (
           <motion.div
@@ -132,28 +185,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="glassmorphism-strong rounded-2xl p-6"
+            className="glassmorphism-strong rounded-3xl p-8"
           >
-            <div className="flex items-center space-x-4">
-              <div className="flex-shrink-0">
-                <ImageIcon size={40} className="text-trading-blue" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="bg-gradient-to-r from-green-500 to-blue-500 p-3 rounded-2xl">
+                  <ImageIcon size={24} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{selectedFile.name}</h3>
+                  <p className="text-white/60 text-sm">{formatFileSize(selectedFile.size)}</p>
+                </div>
               </div>
-              
-              <div className="flex-1 min-w-0">
-                <h4 className="text-white font-medium truncate">
-                  {selectedFile.name}
-                </h4>
-                <p className="text-white/70 text-sm">
-                  {formatFileSize(selectedFile.size)}
-                </p>
-              </div>
-              
               <button
                 onClick={handleReset}
-                className="flex-shrink-0 p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
-                title="Remove file"
+                className="bg-red-500/20 hover:bg-red-500/30 text-red-300 p-2 rounded-xl transition-colors duration-200"
               >
-                <X size={20} className="text-white/70 hover:text-white" />
+                <X size={20} />
               </button>
             </div>
           </motion.div>

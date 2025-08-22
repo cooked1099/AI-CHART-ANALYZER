@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart3, Zap, Shield, Brain } from 'lucide-react'
+import { BarChart3, Zap, Shield, Brain, Sparkles, TrendingUp, Eye, Cpu } from 'lucide-react'
 import FileUpload from '../components/FileUpload'
 import AnalysisResult from '../components/AnalysisResult'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -40,7 +40,7 @@ export default function Home() {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await fetch('/api/analyze', {
+      const response = await fetch('/.netlify/functions/analyze', {
         method: 'POST',
         body: formData,
       })
@@ -87,70 +87,148 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+
+      {/* Floating Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-white/20 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.2, 0.8, 0.2],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="py-8 px-4">
-          <div className="max-w-4xl mx-auto">
+        <header className="py-12 px-4">
+          <div className="max-w-6xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center space-y-4"
+              transition={{ duration: 0.8 }}
+              className="text-center space-y-6"
             >
-              <div className="flex items-center justify-center space-x-3">
-                <BarChart3 size={40} className="text-trading-green" />
-                <h1 className="text-4xl md:text-5xl font-bold text-white">
-                  Trading Chart Analyzer
-                </h1>
+              {/* Logo and Title */}
+              <div className="flex items-center justify-center space-x-4">
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  className="relative"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-2xl blur-lg opacity-50"></div>
+                  <BarChart3 size={48} className="relative text-white" />
+                </motion.div>
+                <div>
+                  <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
+                    Trading Chart
+                  </h1>
+                  <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">
+                    Analyzer
+                  </h2>
+                </div>
               </div>
-              <p className="text-xl text-white/70 max-w-2xl mx-auto">
-                AI-powered analysis of trading charts with instant pair detection, trend analysis, and trading signals
-              </p>
+              
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed"
+              >
+                AI-powered analysis of trading charts with instant pair detection, 
+                <span className="text-cyan-300 font-semibold"> trend analysis</span>, and 
+                <span className="text-purple-300 font-semibold"> trading signals</span>
+              </motion.p>
             </motion.div>
 
-            {/* Features */}
+            {/* Enhanced Features Grid */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto"
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto"
             >
-              <div className="glassmorphism rounded-xl p-4 text-center">
-                <Brain size={24} className="text-trading-blue mx-auto mb-2" />
-                <h3 className="font-semibold text-white text-sm">AI Analysis</h3>
-                <p className="text-white/60 text-xs">Advanced pattern recognition</p>
-              </div>
-              <div className="glassmorphism rounded-xl p-4 text-center">
-                <Zap size={24} className="text-trading-green mx-auto mb-2" />
-                <h3 className="font-semibold text-white text-sm">Instant Results</h3>
-                <p className="text-white/60 text-xs">Real-time processing</p>
-              </div>
-              <div className="glassmorphism rounded-xl p-4 text-center">
-                <Shield size={24} className="text-trading-red mx-auto mb-2" />
-                <h3 className="font-semibold text-white text-sm">Secure</h3>
-                <p className="text-white/60 text-xs">Server-side processing</p>
-              </div>
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="glassmorphism-strong rounded-2xl p-6 text-center group"
+              >
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                  <Brain size={32} className="relative text-cyan-300 mx-auto" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">AI Analysis</h3>
+                <p className="text-white/60 text-sm">Advanced pattern recognition with GPT-4 Vision</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="glassmorphism-strong rounded-2xl p-6 text-center group"
+              >
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                  <Zap size={32} className="relative text-green-300 mx-auto" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">Instant Results</h3>
+                <p className="text-white/60 text-sm">Real-time processing in seconds</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="glassmorphism-strong rounded-2xl p-6 text-center group"
+              >
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                  <Shield size={32} className="relative text-red-300 mx-auto" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">Secure</h3>
+                <p className="text-white/60 text-sm">Server-side processing & encryption</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="glassmorphism-strong rounded-2xl p-6 text-center group"
+              >
+                <div className="relative mb-4">
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                  <Sparkles size={32} className="relative text-yellow-300 mx-auto" />
+                </div>
+                <h3 className="font-bold text-white text-lg mb-2">Smart</h3>
+                <p className="text-white/60 text-sm">Intelligent chart pattern detection</p>
+              </motion.div>
             </motion.div>
           </div>
         </header>
 
         {/* Main Content */}
         <main className="flex-1 flex items-center justify-center px-4 py-8">
-          <div className="w-full max-w-6xl">
+          <div className="w-full max-w-7xl">
             <AnimatePresence mode="wait">
               {appState === 'upload' && (
                 <motion.div
                   key="upload"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
                 >
                   <FileUpload onFileSelect={handleFileSelect} />
                 </motion.div>
@@ -159,10 +237,10 @@ export default function Home() {
               {appState === 'loading' && (
                 <motion.div
                   key="loading"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
                 >
                   <LoadingSpinner />
                 </motion.div>
@@ -171,39 +249,43 @@ export default function Home() {
               {appState === 'result' && analysisResult && (
                 <motion.div
                   key="result"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6"
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-8"
                 >
                   {/* Chart Image and Analysis Side by Side */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                     {/* Uploaded Chart Image */}
                     {uploadedImage && (
                       <motion.div
-                        initial={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 0.1 }}
-                        className="glassmorphism rounded-xl p-4"
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="glassmorphism-strong rounded-3xl p-6"
                       >
-                        <h3 className="text-lg font-semibold text-white mb-4">Uploaded Chart</h3>
+                        <div className="flex items-center space-x-3 mb-6">
+                          <Eye size={24} className="text-cyan-300" />
+                          <h3 className="text-xl font-bold text-white">Uploaded Chart</h3>
+                        </div>
                         <div className="relative">
                           <img 
                             src={uploadedImage} 
                             alt="Trading Chart" 
-                            className="w-full h-auto rounded-lg shadow-lg"
-                            style={{ maxHeight: '400px', objectFit: 'contain' }}
+                            className="w-full h-auto rounded-2xl shadow-2xl border border-white/10"
+                            style={{ maxHeight: '500px', objectFit: 'contain' }}
                           />
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
                         </div>
                       </motion.div>
                     )}
 
                     {/* Analysis Results */}
                     <motion.div
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={{ opacity: 0, x: 30 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: 0.2 }}
+                      transition={{ duration: 0.6, delay: 0.3 }}
                     >
                       <AnalysisResult 
                         analysis={analysisResult} 
@@ -215,31 +297,38 @@ export default function Home() {
                   {/* Debug Information */}
                   {debugInfo && (
                     <motion.div
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.3 }}
-                      className="glassmorphism rounded-xl p-6"
+                      transition={{ duration: 0.6, delay: 0.4 }}
+                      className="glassmorphism-strong rounded-3xl p-8"
                     >
-                      <h3 className="text-lg font-semibold text-white mb-4">Debug Information</h3>
-                      <div className="space-y-3 text-sm">
-                        <div>
-                          <span className="text-white/70">Used Defaults:</span>
-                          <span className={`ml-2 ${debugInfo.usedDefaults ? 'text-trading-red' : 'text-trading-green'}`}>
+                      <div className="flex items-center space-x-3 mb-6">
+                        <Cpu size={24} className="text-purple-300" />
+                        <h3 className="text-xl font-bold text-white">Debug Information</h3>
+                      </div>
+                      <div className="space-y-4 text-sm">
+                        <div className="flex items-center space-x-4">
+                          <span className="text-white/70 font-medium">Used Defaults:</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            debugInfo.usedDefaults 
+                              ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
+                              : 'bg-green-500/20 text-green-300 border border-green-500/30'
+                          }`}>
                             {debugInfo.usedDefaults ? 'Yes' : 'No'}
                           </span>
                         </div>
                         {debugInfo.originalResponse && (
                           <div>
-                            <span className="text-white/70">AI Response:</span>
-                            <div className="mt-1 p-3 bg-black/20 rounded text-white/90 font-mono text-xs">
+                            <span className="text-white/70 font-medium block mb-2">AI Response:</span>
+                            <div className="p-4 bg-black/30 rounded-xl text-white/90 font-mono text-xs border border-white/10">
                               {debugInfo.originalResponse}
                             </div>
                           </div>
                         )}
                         {debugInfo.parsedResult && (
                           <div>
-                            <span className="text-white/70">Parsed Result:</span>
-                            <div className="mt-1 p-3 bg-black/20 rounded text-white/90 font-mono text-xs">
+                            <span className="text-white/70 font-medium block mb-2">Parsed Result:</span>
+                            <div className="p-4 bg-black/30 rounded-xl text-white/90 font-mono text-xs border border-white/10">
                               {JSON.stringify(debugInfo.parsedResult, null, 2)}
                             </div>
                           </div>
@@ -253,15 +342,26 @@ export default function Home() {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="py-6 px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <p className="text-white/50 text-sm">
-              © 2024 Trading Chart Analyzer. Built with Next.js, OpenAI, and Tailwind CSS.
-            </p>
-            <p className="text-white/30 text-xs mt-2">
-              This tool is for educational purposes only. Always do your own research before making trading decisions.
-            </p>
+        {/* Enhanced Footer */}
+        <footer className="py-12 px-4">
+          <div className="max-w-6xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="space-y-4"
+            >
+              <p className="text-white/60 text-lg">
+                © 2024 Trading Chart Analyzer. Built with 
+                <span className="text-cyan-300 font-semibold mx-1">Next.js</span>, 
+                <span className="text-purple-300 font-semibold mx-1">OpenAI</span>, and 
+                <span className="text-green-300 font-semibold mx-1">Tailwind CSS</span>.
+              </p>
+              <p className="text-white/40 text-sm max-w-2xl mx-auto">
+                This tool is for educational purposes only. Always do your own research before making trading decisions. 
+                <span className="text-yellow-300 font-semibold"> Past performance does not guarantee future results.</span>
+              </p>
+            </motion.div>
           </div>
         </footer>
       </div>
