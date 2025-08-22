@@ -26,10 +26,15 @@ export default function Home() {
   const [appState, setAppState] = useState<AppState>('upload')
   const [analysisResult, setAnalysisResult] = useState<AnalysisData | null>(null)
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null)
 
   const handleFileSelect = async (file: File) => {
     setAppState('loading')
     setDebugInfo(null)
+
+    // Create a preview of the uploaded image
+    const imageUrl = URL.createObjectURL(file)
+    setUploadedImage(imageUrl)
 
     try {
       const formData = new FormData()
@@ -75,6 +80,10 @@ export default function Home() {
     setAppState('upload')
     setAnalysisResult(null)
     setDebugInfo(null)
+    if (uploadedImage) {
+      URL.revokeObjectURL(uploadedImage)
+      setUploadedImage(null)
+    }
   }
 
   return (
@@ -133,7 +142,7 @@ export default function Home() {
 
         {/* Main Content */}
         <main className="flex-1 flex items-center justify-center px-4 py-8">
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-6xl">
             <AnimatePresence mode="wait">
               {appState === 'upload' && (
                 <motion.div
@@ -168,17 +177,47 @@ export default function Home() {
                   transition={{ duration: 0.3 }}
                   className="space-y-6"
                 >
-                  <AnalysisResult 
-                    analysis={analysisResult} 
-                    onNewAnalysis={handleNewAnalysis} 
-                  />
+                  {/* Chart Image and Analysis Side by Side */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Uploaded Chart Image */}
+                    {uploadedImage && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.1 }}
+                        className="glassmorphism rounded-xl p-4"
+                      >
+                        <h3 className="text-lg font-semibold text-white mb-4">Uploaded Chart</h3>
+                        <div className="relative">
+                          <img 
+                            src={uploadedImage} 
+                            alt="Trading Chart" 
+                            className="w-full h-auto rounded-lg shadow-lg"
+                            style={{ maxHeight: '400px', objectFit: 'contain' }}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Analysis Results */}
+                    <motion.div
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                    >
+                      <AnalysisResult 
+                        analysis={analysisResult} 
+                        onNewAnalysis={handleNewAnalysis} 
+                      />
+                    </motion.div>
+                  </div>
                   
                   {/* Debug Information */}
                   {debugInfo && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.2 }}
+                      transition={{ duration: 0.3, delay: 0.3 }}
                       className="glassmorphism rounded-xl p-6"
                     >
                       <h3 className="text-lg font-semibold text-white mb-4">Debug Information</h3>

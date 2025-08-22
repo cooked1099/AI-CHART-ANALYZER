@@ -32,53 +32,56 @@ export async function POST(request: NextRequest) {
 
     console.log('Image converted to base64, length:', base64Image.length)
 
-    // Create a much more detailed and specific analysis prompt
+    // Create a much more aggressive and specific analysis prompt
     const analysisPrompt = `
-    You are an expert trading chart analyst. Analyze this trading chart screenshot very carefully and provide accurate information.
+    CRITICAL: You MUST analyze this trading chart screenshot and extract the EXACT information shown in the image. DO NOT guess or use defaults.
 
-    LOOK FOR THESE SPECIFIC ELEMENTS:
+    STEP-BY-STEP ANALYSIS REQUIRED:
 
-    1. PAIR: 
-       - Look for the trading pair name in the chart header, title, or corner
-       - Common formats: BTC/USDT, EUR/USD, USD/MXN, GBP/USD, etc.
+    1. PAIR DETECTION:
+       - Look at the chart header, title, or top of the screen
+       - Search for the trading pair name (e.g., "USD/MXN", "EUR/USD", "BTC/USDT")
        - For Quotex charts, look for pairs like "USD/MXN (OTC)", "EUR/USD", etc.
        - If you see "USD?MXN (OTC)", return "USD/MXN (OTC)"
-       - Be very precise with the exact pair name you see
+       - Look in the top-left, top-right, or center of the chart
+       - Check any text labels, buttons, or headers
 
-    2. TIMEFRAME:
-       - Look for timeframe indicators like M1, M5, M15, M30, H1, H4, D1, W1, MN
-       - Check the chart toolbar, buttons, or time selector
+    2. TIMEFRAME DETECTION:
+       - Look for timeframe buttons or selectors (M1, M5, M15, M30, H1, H4, D1)
+       - Check the chart toolbar, time selector, or buttons
+       - Look for highlighted or selected timeframe
+       - Check the x-axis labels or chart settings
        - For Quotex, common timeframes are M1, M5, M15, M30, H1, H4, D1
-       - Look carefully at the x-axis labels or chart settings
 
-    3. TREND:
-       - Analyze the overall price direction and movement
-       - Look at candlestick patterns, moving averages, and price action
-       - Bullish: Price is generally moving upward
-       - Bearish: Price is generally moving downward  
-       - Sideways: Price is moving horizontally with no clear direction
+    3. TREND ANALYSIS:
+       - Look at the actual candlestick patterns and price movement
+       - Analyze the direction of recent candles
+       - Check if price is moving up, down, or sideways
+       - Look at any moving averages or trend lines
 
-    4. SIGNAL:
-       - Based on current chart patterns, predict the next candle direction
-       - Look at recent candlestick patterns, support/resistance levels
-       - UP: Expect the next candle to be green/bullish
-       - DOWN: Expect the next candle to be red/bearish
+    4. SIGNAL PREDICTION:
+       - Based on the current chart patterns, predict next candle
+       - Look at recent candlestick formations
+       - Consider support/resistance levels
 
-    IMPORTANT INSTRUCTIONS:
-    - Look very carefully at the chart - don't guess
-    - If you can see the information clearly, use the exact values
-    - Only use "Unknown" if you genuinely cannot see the information
-    - For Quotex charts, pay special attention to the pair name format
-    - Be precise with timeframe detection from the chart interface
+    IMPORTANT RULES:
+    - You MUST read the actual text and numbers in the image
+    - DO NOT use "Unknown" unless you absolutely cannot see the information
+    - If you can see the pair name, use the EXACT text you see
+    - If you can see the timeframe, use the EXACT timeframe shown
+    - Look very carefully at every part of the image
+    - This is a real trading chart - analyze it properly
 
-    Return ONLY the result in this exact format:
-    PAIR: "[exact pair name you see]"
-    TIMEFRAME: "[exact timeframe you see]"
-    TREND: "[Bullish/Bearish/Sideways based on chart analysis]"
+    Return ONLY in this exact format:
+    PAIR: "[exact pair name from the chart]"
+    TIMEFRAME: "[exact timeframe from the chart]"
+    TREND: "[Bullish/Bearish/Sideways based on actual chart analysis]"
     SIGNAL: "[UP/DOWN based on current patterns]"
+
+    If you cannot see any information clearly, say so in your response.
     `
 
-    console.log('Sending request to OpenAI...')
+    console.log('Sending request to OpenAI with enhanced prompt...')
 
     // Call OpenAI Vision API with higher token limit for better analysis
     const response = await openai.chat.completions.create({
@@ -100,8 +103,8 @@ export async function POST(request: NextRequest) {
           ]
         }
       ],
-      max_tokens: 500,
-      temperature: 0.1, // Lower temperature for more consistent results
+      max_tokens: 800,
+      temperature: 0.0, // Zero temperature for most deterministic results
     })
 
     const analysisResult = response.choices[0]?.message?.content
@@ -140,7 +143,7 @@ export async function POST(request: NextRequest) {
     let usedDefaults = false
     
     requiredFields.forEach(field => {
-      if (!result[field] || result[field] === 'Unknown' || result[field] === '') {
+      if (!result[field] || result[field] === 'Unknown' || result[field] === '' || result[field].toLowerCase().includes('cannot')) {
         usedDefaults = true
         switch (field) {
           case 'PAIR':
