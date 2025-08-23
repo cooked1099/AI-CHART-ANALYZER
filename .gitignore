@@ -107,3 +107,5 @@ node_modules/
 
 # TernJS port file
 .tern-port
+# Local Netlify folder
+.netlify

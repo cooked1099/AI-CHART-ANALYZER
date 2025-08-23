@@ -39,7 +39,7 @@ export default function Home() {
     setUploadedImage(imageUrl)
 
     try {
-      const formData = new FormData()
+       = new FormData()
       formData.append('file', file)
 
       console.log('Uploading file:', file.name, file.type, file.size)
@@ -47,7 +47,7 @@ export default function Home() {
       const response = await fetch('/.netlify/functions/analyze', {
         method: 'POST',
         body: formData,
-      })
+      })const formData
 
       console.log('Response status:', response.status)
       console.log('Response headers:', response.headers)
