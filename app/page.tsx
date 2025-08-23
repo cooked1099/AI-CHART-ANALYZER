@@ -39,23 +39,46 @@ export default function Home() {
     setUploadedImage(imageUrl)
 
     try {
+      // Validate file before uploading
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error(`Invalid file type: ${file.type}. Please upload an image file (JPEG, PNG, GIF, WebP).`);
+      }
+
+      // Check file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        throw new Error(`File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB. Maximum size is 10MB.`);
+      }
+
       const formData = new FormData();
       formData.append('file', file);
 
-      console.log('Uploading file:', file.name, file.type, file.size)
+      console.log('Uploading file:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)}KB`
+      });
 
       const response = await fetch('/.netlify/functions/analyze', {
         method: 'POST',
         body: formData,
       });
 
-      console.log('Response status:', response.status)
-      console.log('Response headers:', response.headers)
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Response error:', errorText)
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
+        
+        // Try to parse error as JSON for better error messages
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        } catch {
+          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        }
       }
 
       const data = await response.json()

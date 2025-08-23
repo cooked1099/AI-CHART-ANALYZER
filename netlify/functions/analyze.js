@@ -1,4 +1,6 @@
 import fetch from "node-fetch";
+import formidable from "formidable";
+import { readFileSync } from "fs";
 
 export async function handler(event, context) {
   // Enable CORS
@@ -23,7 +25,7 @@ export async function handler(event, context) {
     console.log('Body length:', event.body ? event.body.length : 0);
 
     // Check if OpenAI API key is available
-    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const openaiApiKey = process.env.OPENAI_API_KEY || process.env.API_KEY;
     if (!openaiApiKey) {
       console.error('OpenAI API key not found in environment variables');
       return {
@@ -31,117 +33,164 @@ export async function handler(event, context) {
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'OpenAI API key not configured',
+          error: 'OpenAI API key not configured. Please set OPENAI_API_KEY or API_KEY environment variable.',
           analysis: null
         })
       };
     }
 
-    // Parse multipart form data
-    let fileData = null;
-    let contentType = event.headers['content-type'] || '';
+    // Only accept POST requests
+    if (event.httpMethod !== 'POST') {
+      return {
+        statusCode: 405,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Method not allowed. Use POST.',
+          analysis: null
+        })
+      };
+    }
 
-    if (contentType.includes('multipart/form-data')) {
-      console.log('Processing multipart form data...');
-      
-      // Extract boundary from content-type
-      const boundaryMatch = contentType.match(/boundary=(.+)$/);
-      if (!boundaryMatch) {
-        console.error('No boundary found in content-type');
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({
-            success: false,
-            error: 'Invalid multipart form data: no boundary found',
-            analysis: null
-          })
-        };
-      }
-
-      const boundary = boundaryMatch[1];
-      console.log('Boundary:', boundary);
-
-      // Parse the multipart body
-      const body = event.body;
-      if (!body) {
-        console.error('No body found in request');
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({
-            success: false,
-            error: 'No request body found',
-            analysis: null
-          })
-        };
-      }
-
-      // Split by boundary
-      const parts = body.split(`--${boundary}`);
-      console.log('Number of parts:', parts.length);
-
-      for (const part of parts) {
-        if (part.includes('Content-Disposition: form-data') && part.includes('name="file"')) {
-          // Extract the file data
-          const lines = part.split('\r\n');
-          let dataStart = -1;
-          
-          for (let i = 0; i < lines.length; i++) {
-            if (lines[i] === '') {
-              dataStart = i + 1;
-              break;
-            }
-          }
-          
-          if (dataStart > 0) {
-            fileData = lines.slice(dataStart).join('\r\n').trim();
-            // Remove the trailing boundary
-            if (fileData.endsWith('--')) {
-              fileData = fileData.slice(0, -2);
-            }
-            break;
-          }
-        }
-      }
-
-      if (!fileData) {
-        console.error('No file data found in multipart form');
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({
-            success: false,
-            error: 'No file data found in request',
-            analysis: null
-          })
-        };
-      }
-
-      console.log('File data extracted, length:', fileData.length);
-    } else {
-      console.error('Unsupported content type:', contentType);
+    // Check if request has multipart form data
+    const contentType = event.headers['content-type'] || '';
+    if (!contentType.includes('multipart/form-data')) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'Unsupported content type. Please use multipart/form-data',
+          error: 'Content-Type must be multipart/form-data',
           analysis: null
         })
       };
     }
 
-    // Convert base64 to proper format if needed
-    let base64Data = fileData;
-    if (!fileData.startsWith('data:')) {
-      // If it's raw base64, add the data URL prefix
-      base64Data = `data:image/jpeg;base64,${fileData}`;
+    // Parse multipart form data using formidable
+    const parseForm = () => {
+      return new Promise((resolve, reject) => {
+        // Convert body from base64 if it's encoded
+        let bodyBuffer;
+        if (event.isBase64Encoded) {
+          bodyBuffer = Buffer.from(event.body, 'base64');
+        } else {
+          bodyBuffer = Buffer.from(event.body, 'utf8');
+        }
+
+        // Create a temporary mock request object for formidable
+        const mockReq = {
+          headers: event.headers,
+          method: event.httpMethod,
+          url: event.path,
+          pipe: (stream) => {
+            stream.write(bodyBuffer);
+            stream.end();
+          },
+          unpipe: () => {},
+          on: (event, callback) => {
+            if (event === 'data') {
+              callback(bodyBuffer);
+            } else if (event === 'end') {
+              callback();
+            }
+          },
+          read: () => bodyBuffer,
+          readable: true
+        };
+
+        const form = formidable({
+          maxFileSize: 10 * 1024 * 1024, // 10MB limit
+          allowEmptyFiles: false,
+          minFileSize: 1024, // 1KB minimum
+        });
+
+        form.parse(mockReq, (err, fields, files) => {
+          if (err) {
+            console.error('Formidable parse error:', err);
+            reject(err);
+            return;
+          }
+          resolve({ fields, files });
+        });
+      });
+    };
+
+    let files, fields;
+    try {
+      const parsed = await parseForm();
+      files = parsed.files;
+      fields = parsed.fields;
+    } catch (parseError) {
+      console.error('Error parsing form data:', parseError);
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Failed to parse form data: ' + parseError.message,
+          analysis: null
+        })
+      };
     }
 
-    console.log('Prepared base64 data, length:', base64Data.length);
+    // Check if file was uploaded
+    const fileKey = Object.keys(files)[0];
+    if (!fileKey || !files[fileKey]) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'No file found in request. Please upload an image file.',
+          analysis: null
+        })
+      };
+    }
 
-    // Enhanced analysis prompt
+    const uploadedFile = Array.isArray(files[fileKey]) ? files[fileKey][0] : files[fileKey];
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(uploadedFile.mimetype)) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: `Invalid file type: ${uploadedFile.mimetype}. Please upload an image file (JPEG, PNG, GIF, WebP).`,
+          analysis: null
+        })
+      };
+    }
+
+    console.log('File received:', {
+      name: uploadedFile.originalFilename,
+      type: uploadedFile.mimetype,
+      size: uploadedFile.size,
+      path: uploadedFile.filepath
+    });
+
+    // Read and convert file to base64
+    let fileBuffer;
+    try {
+      fileBuffer = readFileSync(uploadedFile.filepath);
+    } catch (readError) {
+      console.error('Error reading uploaded file:', readError);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Failed to read uploaded file',
+          analysis: null
+        })
+      };
+    }
+
+    const base64Data = `data:${uploadedFile.mimetype};base64,${fileBuffer.toString('base64')}`;
+    console.log('File converted to base64, length:', base64Data.length);
+
+    // Enhanced analysis prompt for trading charts
     const analysisPrompt = `
     You are a professional trading chart analyst. Analyze this trading chart screenshot and extract the EXACT information visible in the image.
 
@@ -236,7 +285,7 @@ export async function handler(event, context) {
         headers,
         body: JSON.stringify({
           success: false,
-          error: `OpenAI API error: ${openaiResponse.status}`,
+          error: `OpenAI API error: ${openaiResponse.status} - ${errorText}`,
           analysis: null
         })
       };
@@ -327,7 +376,12 @@ export async function handler(event, context) {
         debug: {
           hasValidData,
           originalResponse: analysisResult,
-          parsedResult: result
+          parsedResult: result,
+          fileInfo: {
+            name: uploadedFile.originalFilename,
+            size: uploadedFile.size,
+            type: uploadedFile.mimetype
+          }
         }
       })
     };
@@ -341,7 +395,10 @@ export async function handler(event, context) {
       body: JSON.stringify({
         success: false,
         error: 'Analysis failed: ' + error.message,
-        analysis: null
+        analysis: null,
+        debug: {
+          errorStack: error.stack
+        }
       })
     };
   }
