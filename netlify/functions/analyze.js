@@ -155,31 +155,62 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Create a focused and clear analysis prompt
-    const analysisPrompt = `Analyze this trading chart image and extract the following information:
+    // Enhanced analysis prompt with better pattern recognition
+    const analysisPrompt = `You are an expert trading chart analyst. Analyze this trading chart image and provide detailed analysis.
 
-1. TRADING PAIR: Look for the currency pair or trading instrument name (e.g., "USD/MXN", "EUR/USD", "BTC/USDT", "GBP/JPY")
-2. TIMEFRAME: Find the chart timeframe (e.g., "M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1")
-3. CURRENT TREND: Analyze the price movement direction (Bullish, Bearish, or Sideways)
-4. TRADING SIGNAL: Based on the current chart patterns, predict the next likely direction (UP or DOWN)
+ANALYSIS REQUIREMENTS:
+
+1. TRADING PAIR DETECTION:
+   - Look for currency pair names (e.g., "USD/MXN", "EUR/USD", "BTC/USDT", "GBP/JPY")
+   - Check chart headers, titles, top sections, and any text labels
+   - For Quotex charts, look for pairs like "USD/MXN (OTC)", "EUR/USD", etc.
+   - Search in top-left, top-right, center, and any visible text areas
+
+2. TIMEFRAME IDENTIFICATION:
+   - Find chart timeframe indicators (M1, M5, M15, M30, H1, H4, D1, W1)
+   - Look for timeframe buttons, selectors, or highlighted time periods
+   - Check chart toolbar, time selector, or x-axis labels
+   - Common timeframes: M1, M5, M15, M30, H1, H4, D1, W1
+
+3. TREND ANALYSIS:
+   - Analyze recent candlestick patterns and price movement direction
+   - Look at the last 10-20 candles to determine trend
+   - Consider:
+     * Higher highs and higher lows = Bullish
+     * Lower highs and lower lows = Bearish
+     * Sideways movement = Sideways
+   - Check for any visible moving averages or trend lines
+   - Analyze candlestick body sizes and wick patterns
+
+4. SIGNAL GENERATION:
+   - Based on current chart patterns, predict the next likely direction
+   - Consider:
+     * Recent candlestick formations (doji, hammer, shooting star, etc.)
+     * Support and resistance levels
+     * Price momentum and volume patterns
+     * Chart patterns (head and shoulders, triangles, flags, etc.)
+   - Generate UP signal for bullish continuation or reversal
+   - Generate DOWN signal for bearish continuation or reversal
 
 IMPORTANT INSTRUCTIONS:
-- Look carefully at all text labels, headers, and buttons in the image
-- Analyze the actual candlestick patterns and price movement
-- If you cannot clearly see any information, say "NOT VISIBLE" for that field
-- Do not guess or make assumptions - only report what you can actually see
-- For trend analysis, look at recent price action and candlestick formations
-- For signal prediction, consider current market structure and recent patterns
+- Examine every part of the image carefully for trading information
+- If you cannot clearly see any information, respond with "NOT VISIBLE"
+- Do not guess or make assumptions - only report what you can actually observe
+- For trend analysis, focus on recent price action and candlestick patterns
+- For signal prediction, consider current market structure and recent formations
+- Be precise and accurate in your analysis
 
-Please respond in this exact format:
-PAIR: [trading pair name or "NOT VISIBLE"]
-TIMEFRAME: [timeframe or "NOT VISIBLE"]
+RESPONSE FORMAT:
+PAIR: [exact trading pair name or "NOT VISIBLE"]
+TIMEFRAME: [exact timeframe or "NOT VISIBLE"]
 TREND: [Bullish/Bearish/Sideways based on actual chart analysis]
-SIGNAL: [UP/DOWN based on current patterns]`;
+SIGNAL: [UP/DOWN based on current patterns and market structure]
 
-    console.log('Sending request to OpenAI for chart analysis...');
+Provide your analysis based on what you can actually see in the chart image.`;
 
-    // Call OpenAI Vision API
+    console.log('Sending request to OpenAI for enhanced chart analysis...');
+
+    // Call OpenAI Vision API with enhanced parameters
     const response = await openai.chat.completions.create({
       model: "gpt-4-vision-preview",
       messages: [
@@ -199,7 +230,7 @@ SIGNAL: [UP/DOWN based on current patterns]`;
           ]
         }
       ],
-      max_tokens: 500,
+      max_tokens: 600,
       temperature: 0.1, // Low temperature for consistent analysis
     });
 

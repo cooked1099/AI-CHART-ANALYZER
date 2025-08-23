@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown, Eye, EyeOff, Target, Zap, BarChart3, Clock, Coins } from 'lucide-react'
 
 interface AnalysisData {
   PAIR: string
@@ -18,30 +18,30 @@ interface AnalysisResultProps {
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis }) => {
   const getTrendIcon = (trend: string) => {
-    if (trend === 'NOT VISIBLE') return <EyeOff className="text-gray-400" size={20} />
+    if (trend === 'NOT VISIBLE') return <EyeOff className="text-gray-400" size={24} />
     
     switch (trend.toLowerCase()) {
       case 'bullish':
-        return <TrendingUp className="text-trading-green" size={20} />
+        return <TrendingUp className="text-trading-green" size={24} />
       case 'bearish':
-        return <TrendingDown className="text-trading-red" size={20} />
+        return <TrendingDown className="text-trading-red" size={24} />
       case 'sideways':
-        return <Minus className="text-trading-blue" size={20} />
+        return <Minus className="text-trading-blue" size={24} />
       default:
-        return <EyeOff className="text-gray-400" size={20} />
+        return <EyeOff className="text-gray-400" size={24} />
     }
   }
 
   const getSignalIcon = (signal: string) => {
-    if (signal === 'NOT VISIBLE') return <EyeOff className="text-gray-400" size={20} />
+    if (signal === 'NOT VISIBLE') return <EyeOff className="text-gray-400" size={24} />
     
     switch (signal.toLowerCase()) {
       case 'up':
-        return <ArrowUp className="signal-up" size={20} />
+        return <ArrowUp className="signal-up" size={24} />
       case 'down':
-        return <ArrowDown className="signal-down" size={20} />
+        return <ArrowDown className="signal-down" size={24} />
       default:
-        return <EyeOff className="text-gray-400" size={20} />
+        return <EyeOff className="text-gray-400" size={24} />
     }
   }
 
@@ -73,33 +73,55 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
     }
   }
 
-  const getValueDisplay = (value: string, label: string) => {
+  const getValueDisplay = (value: string, label: string, icon: any) => {
     if (value === 'NOT VISIBLE') {
       return (
-        <div className="flex items-center space-x-2">
-          <EyeOff className="text-gray-400" size={16} />
-          <span className="text-gray-400 italic">Not visible in chart</span>
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gray-500/20 rounded-full blur-lg"></div>
+            <EyeOff size={20} className="relative text-gray-400" />
+          </div>
+          <span className="text-gray-400 italic font-medium">Not visible in chart</span>
         </div>
       )
     }
-    return <span className="text-white font-semibold">{value}</span>
+    return (
+      <div className="flex items-center space-x-3">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-lg opacity-30"></div>
+          <icon size={20} className="relative text-white" />
+        </div>
+        <span className="text-white font-bold text-lg">{value}</span>
+      </div>
+    )
   }
 
   const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.5,
+        duration: 0.6,
         staggerChildren: 0.1
       }
     }
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 }
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  }
+
+  const pulseVariants = {
+    pulse: {
+      scale: [1, 1.05, 1],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
   }
 
   // Check if any data was successfully extracted
@@ -110,14 +132,26 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="w-full max-w-2xl mx-auto space-y-6"
+      className="w-full max-w-2xl mx-auto space-y-8"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Analysis Complete
-        </h2>
-        <p className="text-white/70">
+      <motion.div variants={itemVariants} className="text-center space-y-4">
+        <motion.div
+          variants={pulseVariants}
+          animate="pulse"
+          className="flex items-center justify-center space-x-3"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-500 rounded-full blur-xl opacity-40"></div>
+            <div className="relative bg-gradient-to-r from-green-600 to-blue-600 p-4 rounded-full">
+              <Target size={32} className="text-white" />
+            </div>
+          </div>
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
+            Analysis Complete
+          </h2>
+        </motion.div>
+        <p className="text-xl text-white/80 leading-relaxed">
           AI-powered trading chart analysis results
         </p>
       </motion.div>
@@ -125,34 +159,62 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       {/* Analysis Results */}
       <motion.div
         variants={itemVariants}
-        className="glassmorphism-strong rounded-2xl p-6"
+        className="glassmorphism-strong rounded-3xl p-8"
       >
-        <div className="result-code rounded-lg p-4 font-mono text-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-white/70">PAIR:</span>
-            {getValueDisplay(analysis.PAIR, 'PAIR')}
+        <div className="space-y-6">
+          {/* Trading Pair */}
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-lg opacity-30"></div>
+                <Coins size={24} className="relative text-purple-300" />
+              </div>
+              <span className="text-white/70 font-semibold text-lg">Trading Pair</span>
+            </div>
+            {getValueDisplay(analysis.PAIR, 'PAIR', Coins)}
           </div>
           
-          <div className="flex items-center justify-between">
-            <span className="text-white/70">TIMEFRAME:</span>
-            {getValueDisplay(analysis.TIMEFRAME, 'TIMEFRAME')}
+          {/* Timeframe */}
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-green-500 rounded-full blur-lg opacity-30"></div>
+                <Clock size={24} className="relative text-blue-300" />
+              </div>
+              <span className="text-white/70 font-semibold text-lg">Timeframe</span>
+            </div>
+            {getValueDisplay(analysis.TIMEFRAME, 'TIMEFRAME', Clock)}
           </div>
           
-          <div className="flex items-center justify-between">
-            <span className="text-white/70">TREND:</span>
-            <div className="flex items-center space-x-2">
+          {/* Trend */}
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-yellow-500 rounded-full blur-lg opacity-30"></div>
+                <BarChart3 size={24} className="relative text-green-300" />
+              </div>
+              <span className="text-white/70 font-semibold text-lg">Current Trend</span>
+            </div>
+            <div className="flex items-center space-x-3">
               {getTrendIcon(analysis.TREND)}
-              <span className={`font-semibold ${getTrendClass(analysis.TREND)}`}>
+              <span className={`font-bold text-xl ${getTrendClass(analysis.TREND)}`}>
                 {analysis.TREND === 'NOT VISIBLE' ? 'Not visible' : analysis.TREND}
               </span>
             </div>
           </div>
           
-          <div className="flex items-center justify-between">
-            <span className="text-white/70">SIGNAL:</span>
-            <div className="flex items-center space-x-2">
+          {/* Signal */}
+          <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-full blur-lg opacity-30"></div>
+                <Zap size={24} className="relative text-red-300" />
+              </div>
+              <span className="text-white/70 font-semibold text-lg">Trading Signal</span>
+            </div>
+            <div className="flex items-center space-x-3">
               {getSignalIcon(analysis.SIGNAL)}
-              <span className={`font-semibold ${getSignalClass(analysis.SIGNAL)}`}>
+              <span className={`font-bold text-xl ${getSignalClass(analysis.SIGNAL)}`}>
                 {analysis.SIGNAL === 'NOT VISIBLE' ? 'Not visible' : analysis.SIGNAL}
               </span>
             </div>
@@ -164,19 +226,39 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       {hasValidData && (
         <motion.div
           variants={itemVariants}
-          className="glassmorphism rounded-xl p-4"
+          className="glassmorphism rounded-3xl p-8 border border-white/20"
         >
-          <div className="text-center">
-            <h3 className="text-lg font-semibold text-white mb-2">
+          <div className="text-center space-y-6">
+            <motion.h3 
+              className="text-2xl font-bold text-white"
+              animate={{
+                opacity: [0.7, 1, 0.7],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
               Trading Signal
-            </h3>
-            <div className="flex items-center justify-center space-x-3">
+            </motion.h3>
+            <motion.div 
+              className="flex items-center justify-center space-x-4"
+              animate={{
+                scale: [1, 1.05, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
               {getSignalIcon(analysis.SIGNAL)}
-              <span className={`text-xl font-bold ${getSignalClass(analysis.SIGNAL)}`}>
+              <span className={`text-3xl font-black ${getSignalClass(analysis.SIGNAL)}`}>
                 {analysis.SIGNAL === 'NOT VISIBLE' ? 'Not visible' : analysis.SIGNAL}
               </span>
-            </div>
-            <p className="text-white/70 text-sm mt-2">
+            </motion.div>
+            <p className="text-white/70 text-lg">
               Based on {analysis.PAIR !== 'NOT VISIBLE' ? analysis.PAIR : 'chart'} {analysis.TIMEFRAME !== 'NOT VISIBLE' ? analysis.TIMEFRAME : ''} analysis
             </p>
           </div>
@@ -187,16 +269,29 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       {!hasValidData && (
         <motion.div
           variants={itemVariants}
-          className="glassmorphism rounded-xl p-4 border border-yellow-500/30"
+          className="glassmorphism rounded-3xl p-8 border border-yellow-500/30"
         >
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-2">
-              <EyeOff className="text-yellow-400" size={20} />
-              <h3 className="text-lg font-semibold text-yellow-400">
+          <div className="text-center space-y-4">
+            <motion.div 
+              className="flex items-center justify-center space-x-3"
+              animate={{
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-yellow-500/20 rounded-full blur-lg"></div>
+                <EyeOff size={32} className="relative text-yellow-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-yellow-400">
                 Limited Analysis
               </h3>
-            </div>
-            <p className="text-white/70 text-sm">
+            </motion.div>
+            <p className="text-white/80 text-lg leading-relaxed">
               Could not extract trading information from the chart. Please ensure the image is clear and contains visible trading data.
             </p>
           </div>
@@ -208,12 +303,14 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
         variants={itemVariants}
         className="text-center"
       >
-        <button
+        <motion.button
           onClick={onNewAnalysis}
-          className="bg-gradient-to-r from-trading-green to-trading-blue hover:from-trading-blue hover:to-trading-green text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="bg-gradient-to-r from-trading-green to-trading-blue hover:from-trading-blue hover:to-trading-green text-white font-bold py-4 px-10 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-green-500/25"
         >
           New Analysis
-        </button>
+        </motion.button>
       </motion.div>
 
       {/* Disclaimer */}
@@ -221,9 +318,12 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
         variants={itemVariants}
         className="text-center"
       >
-        <p className="text-white/50 text-xs">
-          ⚠️ This analysis is for educational purposes only. Always do your own research and never invest more than you can afford to lose.
-        </p>
+        <div className="glassmorphism rounded-2xl p-6 border border-white/10">
+          <p className="text-white/60 text-sm leading-relaxed">
+            ⚠️ This analysis is for educational purposes only. Always do your own research and never invest more than you can afford to lose. 
+            <span className="text-yellow-300 font-semibold block mt-2">Past performance does not guarantee future results.</span>
+          </p>
+        </div>
       </motion.div>
     </motion.div>
   )
