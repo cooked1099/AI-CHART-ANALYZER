@@ -91,8 +91,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
             
             {/* Animated Background Elements */}
             <div className="absolute inset-0 rounded-3xl overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-500/5 to-cyan-500/5"></div>
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-purple-400/10 to-cyan-400/10 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-red-500/5 to-orange-500/5"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-red-400/10 to-orange-400/10 rounded-full blur-3xl animate-pulse"></div>
             </div>
 
             <motion.div
@@ -110,8 +110,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
                 transition={{ duration: 0.3 }}
                 className="relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-3xl blur-xl opacity-30"></div>
-                <div className="relative bg-gradient-to-r from-purple-500 to-cyan-500 p-6 rounded-3xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-orange-400 rounded-3xl blur-xl opacity-40"></div>
+                <div className="relative bg-gradient-to-r from-red-500 to-orange-500 p-6 rounded-3xl">
                   <Upload size={48} className="text-white" />
                 </div>
               </motion.div>
@@ -131,7 +131,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="text-lg text-white/70 max-w-2xl mx-auto leading-relaxed"
+                  className="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed"
                 >
                   Drag and drop your trading chart screenshot here, or click to browse
                 </motion.p>
@@ -145,15 +145,15 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
                 className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto"
               >
                 <div className="flex items-center space-x-3 text-white/80">
-                  <Sparkles size={20} className="text-cyan-300" />
+                  <Sparkles size={20} className="text-orange-300" />
                   <span className="text-sm">AI-Powered Analysis</span>
                 </div>
                 <div className="flex items-center space-x-3 text-white/80">
-                  <Zap size={20} className="text-purple-300" />
+                  <Zap size={20} className="text-red-300" />
                   <span className="text-sm">Instant Results</span>
                 </div>
                 <div className="flex items-center space-x-3 text-white/80">
-                  <ImageIcon size={20} className="text-green-300" />
+                  <ImageIcon size={20} className="text-yellow-300" />
                   <span className="text-sm">PNG, JPG Support</span>
                 </div>
               </motion.div>
@@ -163,7 +163,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl btn-glow"
               >
                 Choose File
               </motion.button>
@@ -174,7 +174,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl border-2 border-dashed border-white/50"
+                className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-3xl border-2 border-dashed border-white/50"
               />
             )}
           </motion.div>
@@ -189,12 +189,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading = false
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="bg-gradient-to-r from-green-500 to-blue-500 p-3 rounded-2xl">
+                <div className="bg-gradient-to-r from-orange-500 to-red-500 p-3 rounded-2xl">
                   <ImageIcon size={24} className="text-white" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-white">{selectedFile.name}</h3>
-                  <p className="text-white/60 text-sm">{formatFileSize(selectedFile.size)}</p>
+                  <p className="text-white/70 text-sm">{formatFileSize(selectedFile.size)}</p>
                 </div>
               </div>
               <button

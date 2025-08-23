@@ -30,17 +30,12 @@ exports.handler = async (event, context) => {
   // Check if OpenAI is properly initialized
   if (!openai) {
     return {
-      statusCode: 200,
+      statusCode: 500,
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        success: true,
-        analysis: {
-          PAIR: 'BTC/USDT',
-          TIMEFRAME: 'H1',
-          TREND: 'Bullish',
-          SIGNAL: 'UP'
-        },
-        debug: 'OpenAI not initialized'
+        success: false,
+        error: 'OpenAI service not available',
+        analysis: null
       })
     };
   }
@@ -92,17 +87,12 @@ exports.handler = async (event, context) => {
 
     if (!fileData) {
       return {
-        statusCode: 200,
+        statusCode: 400,
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          success: true,
-          analysis: {
-            PAIR: 'BTC/USDT',
-            TIMEFRAME: 'H1',
-            TREND: 'Bullish',
-            SIGNAL: 'UP'
-          },
-          debug: 'No file data found'
+          success: false,
+          error: 'No file data provided',
+          analysis: null
         })
       };
     }
@@ -114,53 +104,58 @@ exports.handler = async (event, context) => {
 
     console.log('Image converted to base64, length:', fileData.length);
 
-    // Create a much more aggressive and specific analysis prompt
+    // Enhanced analysis prompt with better instructions
     const analysisPrompt = `
-    CRITICAL: You MUST analyze this trading chart screenshot and extract the EXACT information shown in the image. DO NOT guess or use defaults.
+    You are a professional trading chart analyst. Analyze this trading chart screenshot and extract the EXACT information visible in the image.
 
-    STEP-BY-STEP ANALYSIS REQUIRED:
+    CRITICAL INSTRUCTIONS:
+    1. Look at EVERY part of the image carefully
+    2. Read ALL text, numbers, and labels visible
+    3. Analyze the actual candlestick patterns and price movement
+    4. DO NOT make assumptions or use generic values
+    5. If you cannot see specific information, indicate this clearly
 
-    1. PAIR DETECTION:
-       - Look at the chart header, title, or top of the screen
-       - Search for the trading pair name (e.g., "USD/MXN", "EUR/USD", "BTC/USDT")
-       - For Quotex charts, look for pairs like "USD/MXN (OTC)", "EUR/USD", etc.
-       - If you see "USD?MXN (OTC)", return "USD/MXN (OTC)"
-       - Look in the top-left, top-right, or center of the chart
-       - Check any text labels, buttons, or headers
+    ANALYSIS REQUIREMENTS:
 
-    2. TIMEFRAME DETECTION:
-       - Look for timeframe buttons or selectors (M1, M5, M15, M30, H1, H4, D1)
-       - Check the chart toolbar, time selector, or buttons
-       - Look for highlighted or selected timeframe
-       - Check the x-axis labels or chart settings
-       - For Quotex, common timeframes are M1, M5, M15, M30, H1, H4, D1
+    PAIR DETECTION:
+    - Search for trading pair symbols in the chart header, title, or top area
+    - Look for text like "BTC/USDT", "EUR/USD", "USD/MXN", "GBP/JPY", etc.
+    - Check for any currency pair indicators or labels
+    - Look in the top-left, top-right, center-top, or any visible text areas
+    - For Quotex charts, look for pairs like "USD/MXN (OTC)", "EUR/USD", etc.
 
-    3. TREND ANALYSIS:
-       - Look at the actual candlestick patterns and price movement
-       - Analyze the direction of recent candles
-       - Check if price is moving up, down, or sideways
-       - Look at any moving averages or trend lines
+    TIMEFRAME DETECTION:
+    - Look for timeframe selectors or buttons (M1, M5, M15, M30, H1, H4, D1, W1)
+    - Check the chart toolbar, time selector, or any highlighted timeframe
+    - Look at the x-axis labels or chart settings
+    - Search for any time-related indicators or buttons
 
-    4. SIGNAL PREDICTION:
-       - Based on the current chart patterns, predict next candle
-       - Look at recent candlestick formations
-       - Consider support/resistance levels
+    TREND ANALYSIS:
+    - Examine the actual candlestick patterns and recent price movement
+    - Look at the direction of the most recent candles (last 5-10 candles)
+    - Check if the overall price movement is upward, downward, or sideways
+    - Consider any visible moving averages, trend lines, or indicators
+    - Analyze the candlestick body colors (green/red for bullish/bearish)
 
-    IMPORTANT RULES:
-    - You MUST read the actual text and numbers in the image
-    - DO NOT use "Unknown" unless you absolutely cannot see the information
-    - If you can see the pair name, use the EXACT text you see
-    - If you can see the timeframe, use the EXACT timeframe shown
-    - Look very carefully at every part of the image
-    - This is a real trading chart - analyze it properly
+    SIGNAL PREDICTION:
+    - Based on the current chart patterns, predict the likely direction of the next candle
+    - Consider recent candlestick formations and momentum
+    - Look at support/resistance levels if visible
+    - Analyze the overall market sentiment from the chart
 
-    Return ONLY in this exact format:
-    PAIR: "[exact pair name from the chart]"
-    TIMEFRAME: "[exact timeframe from the chart]"
-    TREND: "[Bullish/Bearish/Sideways based on actual chart analysis]"
+    RESPONSE FORMAT:
+    Return your analysis in this exact format:
+    PAIR: "[exact pair name from chart or 'Not visible']"
+    TIMEFRAME: "[exact timeframe from chart or 'Not visible']"
+    TREND: "[Bullish/Bearish/Sideways based on actual analysis]"
     SIGNAL: "[UP/DOWN based on current patterns]"
 
-    If you cannot see any information clearly, say so in your response.
+    IMPORTANT:
+    - If you cannot see the pair name, write "Not visible"
+    - If you cannot see the timeframe, write "Not visible"
+    - For TREND and SIGNAL, always provide your analysis based on the visible chart patterns
+    - Be honest about what you can and cannot see in the image
+    - Do not use placeholder or default values unless absolutely necessary
     `;
 
     console.log('Sending request to OpenAI with enhanced prompt...');
@@ -185,8 +180,8 @@ exports.handler = async (event, context) => {
           ]
         }
       ],
-      max_tokens: 800,
-      temperature: 0.0, // Zero temperature for most deterministic results
+      max_tokens: 1000,
+      temperature: 0.1, // Low temperature for more consistent results
     });
 
     const analysisResult = response.choices[0]?.message?.content;
@@ -194,19 +189,13 @@ exports.handler = async (event, context) => {
     console.log('AI Response:', analysisResult);
 
     if (!analysisResult) {
-      console.log('No AI response received, using defaults');
       return {
-        statusCode: 200,
+        statusCode: 500,
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          success: true,
-          analysis: {
-            PAIR: 'BTC/USDT',
-            TIMEFRAME: 'H1',
-            TREND: 'Bullish',
-            SIGNAL: 'UP'
-          },
-          debug: 'No AI response'
+          success: false,
+          error: 'No response from AI service',
+          analysis: null
         })
       };
     }
@@ -224,31 +213,52 @@ exports.handler = async (event, context) => {
 
     console.log('Parsed Result:', result);
 
-    // Only use defaults if the AI truly couldn't detect something
+    // Validate and clean the result
     const requiredFields = ['PAIR', 'TIMEFRAME', 'TREND', 'SIGNAL'];
-    let usedDefaults = false;
+    let hasValidData = false;
     
     requiredFields.forEach(field => {
-      if (!result[field] || result[field] === 'Unknown' || result[field] === '' || result[field].toLowerCase().includes('cannot')) {
-        usedDefaults = true;
-        switch (field) {
-          case 'PAIR':
-            result[field] = 'BTC/USDT';
-            break;
-          case 'TIMEFRAME':
-            result[field] = 'H1';
-            break;
-          case 'TREND':
-            result[field] = 'Bullish';
-            break;
-          case 'SIGNAL':
-            result[field] = 'UP';
-            break;
+      if (!result[field] || result[field] === 'Unknown' || result[field] === '') {
+        if (field === 'PAIR' || field === 'TIMEFRAME') {
+          result[field] = 'Not visible';
+        } else {
+          // For TREND and SIGNAL, we need to provide analysis
+          if (field === 'TREND') {
+            result[field] = 'Sideways'; // Default to sideways if unclear
+          } else if (field === 'SIGNAL') {
+            result[field] = 'NEUTRAL'; // Default to neutral if unclear
+          }
         }
+      } else {
+        hasValidData = true;
       }
     });
 
-    console.log('Final Result:', result, 'Used defaults:', usedDefaults);
+    // Normalize signal values
+    if (result.SIGNAL) {
+      const signal = result.SIGNAL.toUpperCase();
+      if (signal.includes('UP') || signal.includes('BUY') || signal.includes('BULL')) {
+        result.SIGNAL = 'UP';
+      } else if (signal.includes('DOWN') || signal.includes('SELL') || signal.includes('BEAR')) {
+        result.SIGNAL = 'DOWN';
+      } else {
+        result.SIGNAL = 'NEUTRAL';
+      }
+    }
+
+    // Normalize trend values
+    if (result.TREND) {
+      const trend = result.TREND.toUpperCase();
+      if (trend.includes('BULL') || trend.includes('UP') || trend.includes('RISING')) {
+        result.TREND = 'Bullish';
+      } else if (trend.includes('BEAR') || trend.includes('DOWN') || trend.includes('FALLING')) {
+        result.TREND = 'Bearish';
+      } else {
+        result.TREND = 'Sideways';
+      }
+    }
+
+    console.log('Final Result:', result, 'Has valid data:', hasValidData);
 
     return {
       statusCode: 200,
@@ -258,7 +268,7 @@ exports.handler = async (event, context) => {
         analysis: result,
         rawResponse: analysisResult,
         debug: {
-          usedDefaults,
+          hasValidData,
           originalResponse: analysisResult,
           parsedResult: result
         }
@@ -269,17 +279,12 @@ exports.handler = async (event, context) => {
     console.error('Analysis error:', error);
     
     return {
-      statusCode: 200,
+      statusCode: 500,
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        success: true,
-        analysis: {
-          PAIR: 'BTC/USDT',
-          TIMEFRAME: 'H1',
-          TREND: 'Bullish',
-          SIGNAL: 'UP'
-        },
-        debug: 'Error occurred: ' + (error.message || 'Unknown error')
+        success: false,
+        error: 'Analysis failed: ' + (error.message || 'Unknown error'),
+        analysis: null
       })
     };
   }

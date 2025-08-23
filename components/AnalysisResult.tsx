@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react'
 
 interface AnalysisData {
   PAIR: string
@@ -20,11 +20,11 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
   const getTrendIcon = (trend: string) => {
     switch (trend.toLowerCase()) {
       case 'bullish':
-        return <TrendingUp className="text-trading-green" size={20} />
+        return <TrendingUp className="text-green-400" size={20} />
       case 'bearish':
-        return <TrendingDown className="text-trading-red" size={20} />
+        return <TrendingDown className="text-red-400" size={20} />
       case 'sideways':
-        return <Minus className="text-trading-blue" size={20} />
+        return <Minus className="text-yellow-400" size={20} />
       default:
         return null
     }
@@ -36,6 +36,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
         return <ArrowUp className="signal-up" size={20} />
       case 'down':
         return <ArrowDown className="signal-down" size={20} />
+      case 'neutral':
+        return <ArrowRight className="signal-neutral" size={20} />
       default:
         return null
     }
@@ -60,6 +62,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
         return 'signal-up'
       case 'down':
         return 'signal-down'
+      case 'neutral':
+        return 'signal-neutral'
       default:
         return 'text-white'
     }
@@ -94,7 +98,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
         <h2 className="text-2xl font-bold text-white mb-2">
           Analysis Complete
         </h2>
-        <p className="text-white/70">
+        <p className="text-white/80">
           AI-powered trading chart analysis results
         </p>
       </motion.div>
@@ -165,7 +169,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       >
         <button
           onClick={onNewAnalysis}
-          className="bg-gradient-to-r from-trading-green to-trading-blue hover:from-trading-blue hover:to-trading-green text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-orange-500 hover:to-red-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
         >
           New Analysis
         </button>
@@ -176,7 +180,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
         variants={itemVariants}
         className="text-center"
       >
-        <p className="text-white/50 text-xs">
+        <p className="text-white/60 text-xs">
           ⚠️ This analysis is for educational purposes only. Always do your own research and never invest more than you can afford to lose.
         </p>
       </motion.div>

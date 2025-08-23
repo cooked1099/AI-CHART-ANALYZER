@@ -26,7 +26,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           className="w-20 h-20 mx-auto"
         >
-          <div className="w-full h-full border-4 border-white/10 border-t-trading-green rounded-full" />
+          <div className="w-full h-full border-4 border-white/10 border-t-orange-500 rounded-full" />
         </motion.div>
         
         <motion.div
@@ -34,7 +34,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           transition={{ duration: 2, repeat: Infinity }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <BarChart3 size={32} className="text-trading-green" />
+          <BarChart3 size={32} className="text-orange-400" />
         </motion.div>
       </div>
 
@@ -43,7 +43,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         <h3 className="text-xl font-semibold text-white">
           AI Analysis in Progress
         </h3>
-        <p className="text-white/70 text-sm">
+        <p className="text-white/80 text-sm">
           {message}
         </p>
       </div>
@@ -62,7 +62,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
               repeat: Infinity,
               delay: index * 0.2
             }}
-            className="w-2 h-2 bg-trading-green rounded-full"
+            className="w-2 h-2 bg-orange-400 rounded-full"
           />
         ))}
       </div>
@@ -71,7 +71,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       <motion.div
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 2, repeat: Infinity }}
-        className="text-white/50 text-xs space-y-1"
+        className="text-white/60 text-xs space-y-1"
       >
         <p>• Detecting trading pair and timeframe</p>
         <p>• Analyzing price action and indicators</p>

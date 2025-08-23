@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart3, Zap, Shield, Brain, Sparkles, TrendingUp, Eye, Cpu } from 'lucide-react'
+import { BarChart3, Zap, Shield, Brain, Sparkles, TrendingUp, Eye, Cpu, AlertCircle } from 'lucide-react'
 import FileUpload from '../components/FileUpload'
 import AnalysisResult from '../components/AnalysisResult'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -15,22 +15,24 @@ interface AnalysisData {
 }
 
 interface DebugInfo {
-  usedDefaults?: boolean
+  hasValidData?: boolean
   originalResponse?: string
   parsedResult?: any
 }
 
-type AppState = 'upload' | 'loading' | 'result'
+type AppState = 'upload' | 'loading' | 'result' | 'error'
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('upload')
   const [analysisResult, setAnalysisResult] = useState<AnalysisData | null>(null)
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleFileSelect = async (file: File) => {
     setAppState('loading')
     setDebugInfo(null)
+    setErrorMessage(null)
 
     // Create a preview of the uploaded image
     const imageUrl = URL.createObjectURL(file)
@@ -47,32 +49,17 @@ export default function Home() {
 
       const data = await response.json()
 
-      // Always treat as success - no error handling
-      if (data.analysis) {
+      if (data.success && data.analysis) {
         setAnalysisResult(data.analysis)
         setDebugInfo(data.debug || null)
+        setAppState('result')
       } else {
-        // Create a default analysis if none provided
-        setAnalysisResult({
-          PAIR: 'BTC/USDT',
-          TIMEFRAME: 'H1',
-          TREND: 'Bullish',
-          SIGNAL: 'UP'
-        })
-        setDebugInfo({ usedDefaults: true, originalResponse: 'No analysis provided' })
+        setErrorMessage(data.error || 'Analysis failed. Please try again.')
+        setAppState('error')
       }
-      
-      setAppState('result')
     } catch (error) {
-      // Never show errors - always show a result
-      setAnalysisResult({
-        PAIR: 'BTC/USDT',
-        TIMEFRAME: 'H1',
-        TREND: 'Bullish',
-        SIGNAL: 'UP'
-      })
-      setDebugInfo({ usedDefaults: true, originalResponse: 'Error occurred' })
-      setAppState('result')
+      setErrorMessage('Network error. Please check your connection and try again.')
+      setAppState('error')
     }
   }
 
@@ -80,6 +67,7 @@ export default function Home() {
     setAppState('upload')
     setAnalysisResult(null)
     setDebugInfo(null)
+    setErrorMessage(null)
     if (uploadedImage) {
       URL.revokeObjectURL(uploadedImage)
       setUploadedImage(null)
@@ -87,32 +75,33 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-20 left-20 w-72 h-72 bg-red-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-yellow-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       {/* Floating Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(30)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-white/20 rounded-full"
+            className="absolute w-2 h-2 bg-red-400/30 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -20, 0],
-              opacity: [0.2, 0.8, 0.2],
+              y: [0, -30, 0],
+              opacity: [0.1, 0.6, 0.1],
+              scale: [1, 1.5, 1],
             }}
             transition={{
-              duration: 3 + Math.random() * 2,
+              duration: 4 + Math.random() * 3,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: Math.random() * 3,
             }}
           />
         ))}
@@ -131,18 +120,18 @@ export default function Home() {
               {/* Logo and Title */}
               <div className="flex items-center justify-center space-x-4">
                 <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
                   className="relative"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-2xl blur-lg opacity-50"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-orange-400 rounded-2xl blur-lg opacity-60"></div>
                   <BarChart3 size={48} className="relative text-white" />
                 </motion.div>
                 <div>
-                  <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
+                  <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-red-200 to-orange-200 bg-clip-text text-transparent">
                     Trading Chart
                   </h1>
-                  <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent">
+                  <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-orange-200 to-red-200 bg-clip-text text-transparent">
                     Analyzer
                   </h2>
                 </div>
@@ -152,11 +141,11 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-xl md:text-2xl text-white/80 max-w-3xl mx-auto leading-relaxed"
+                className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed"
               >
                 AI-powered analysis of trading charts with instant pair detection, 
-                <span className="text-cyan-300 font-semibold"> trend analysis</span>, and 
-                <span className="text-purple-300 font-semibold"> trading signals</span>
+                <span className="text-orange-300 font-semibold"> trend analysis</span>, and 
+                <span className="text-red-300 font-semibold"> trading signals</span>
               </motion.p>
             </motion.div>
 
@@ -172,11 +161,11 @@ export default function Home() {
                 className="glassmorphism-strong rounded-2xl p-6 text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                  <Brain size={32} className="relative text-cyan-300 mx-auto" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                  <Brain size={32} className="relative text-orange-300 mx-auto" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">AI Analysis</h3>
-                <p className="text-white/60 text-sm">Advanced pattern recognition with GPT-4 Vision</p>
+                <p className="text-white/70 text-sm">Advanced pattern recognition with GPT-4 Vision</p>
               </motion.div>
 
               <motion.div 
@@ -184,11 +173,11 @@ export default function Home() {
                 className="glassmorphism-strong rounded-2xl p-6 text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                  <Zap size={32} className="relative text-green-300 mx-auto" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                  <Zap size={32} className="relative text-yellow-300 mx-auto" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Instant Results</h3>
-                <p className="text-white/60 text-sm">Real-time processing in seconds</p>
+                <p className="text-white/70 text-sm">Real-time processing in seconds</p>
               </motion.div>
 
               <motion.div 
@@ -196,11 +185,11 @@ export default function Home() {
                 className="glassmorphism-strong rounded-2xl p-6 text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-red-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
                   <Shield size={32} className="relative text-red-300 mx-auto" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Secure</h3>
-                <p className="text-white/60 text-sm">Server-side processing & encryption</p>
+                <p className="text-white/70 text-sm">Server-side processing & encryption</p>
               </motion.div>
 
               <motion.div 
@@ -208,11 +197,11 @@ export default function Home() {
                 className="glassmorphism-strong rounded-2xl p-6 text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                  <Sparkles size={32} className="relative text-yellow-300 mx-auto" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                  <Sparkles size={32} className="relative text-pink-300 mx-auto" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Smart</h3>
-                <p className="text-white/60 text-sm">Intelligent chart pattern detection</p>
+                <p className="text-white/70 text-sm">Intelligent chart pattern detection</p>
               </motion.div>
             </motion.div>
           </div>
@@ -246,6 +235,31 @@ export default function Home() {
                 </motion.div>
               )}
 
+              {appState === 'error' && (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
+                  className="glassmorphism-strong rounded-3xl p-8 max-w-2xl mx-auto text-center"
+                >
+                  <div className="flex items-center justify-center space-x-3 mb-6">
+                    <AlertCircle size={32} className="text-red-400" />
+                    <h3 className="text-2xl font-bold text-white">Analysis Failed</h3>
+                  </div>
+                  <p className="text-white/80 text-lg mb-6">
+                    {errorMessage}
+                  </p>
+                  <button
+                    onClick={handleNewAnalysis}
+                    className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-orange-500 hover:to-red-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  >
+                    Try Again
+                  </button>
+                </motion.div>
+              )}
+
               {appState === 'result' && analysisResult && (
                 <motion.div
                   key="result"
@@ -266,7 +280,7 @@ export default function Home() {
                         className="glassmorphism-strong rounded-3xl p-6"
                       >
                         <div className="flex items-center space-x-3 mb-6">
-                          <Eye size={24} className="text-cyan-300" />
+                          <Eye size={24} className="text-orange-300" />
                           <h3 className="text-xl font-bold text-white">Uploaded Chart</h3>
                         </div>
                         <div className="relative">
@@ -303,18 +317,18 @@ export default function Home() {
                       className="glassmorphism-strong rounded-3xl p-8"
                     >
                       <div className="flex items-center space-x-3 mb-6">
-                        <Cpu size={24} className="text-purple-300" />
-                        <h3 className="text-xl font-bold text-white">Debug Information</h3>
+                        <Cpu size={24} className="text-red-300" />
+                        <h3 className="text-xl font-bold text-white">Analysis Details</h3>
                       </div>
                       <div className="space-y-4 text-sm">
                         <div className="flex items-center space-x-4">
-                          <span className="text-white/70 font-medium">Used Defaults:</span>
+                          <span className="text-white/70 font-medium">Data Quality:</span>
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            debugInfo.usedDefaults 
-                              ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
-                              : 'bg-green-500/20 text-green-300 border border-green-500/30'
+                            debugInfo.hasValidData 
+                              ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                              : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
                           }`}>
-                            {debugInfo.usedDefaults ? 'Yes' : 'No'}
+                            {debugInfo.hasValidData ? 'High Quality' : 'Partial Data'}
                           </span>
                         </div>
                         {debugInfo.originalResponse && (
@@ -327,7 +341,7 @@ export default function Home() {
                         )}
                         {debugInfo.parsedResult && (
                           <div>
-                            <span className="text-white/70 font-medium block mb-2">Parsed Result:</span>
+                            <span className="text-white/70 font-medium block mb-2">Processed Result:</span>
                             <div className="p-4 bg-black/30 rounded-xl text-white/90 font-mono text-xs border border-white/10">
                               {JSON.stringify(debugInfo.parsedResult, null, 2)}
                             </div>
@@ -351,15 +365,15 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="space-y-4"
             >
-              <p className="text-white/60 text-lg">
+              <p className="text-white/70 text-lg">
                 © 2024 Trading Chart Analyzer. Built with 
-                <span className="text-cyan-300 font-semibold mx-1">Next.js</span>, 
-                <span className="text-purple-300 font-semibold mx-1">OpenAI</span>, and 
-                <span className="text-green-300 font-semibold mx-1">Tailwind CSS</span>.
+                <span className="text-orange-300 font-semibold mx-1">Next.js</span>, 
+                <span className="text-red-300 font-semibold mx-1">OpenAI</span>, and 
+                <span className="text-yellow-300 font-semibold mx-1">Tailwind CSS</span>.
               </p>
-              <p className="text-white/40 text-sm max-w-2xl mx-auto">
+              <p className="text-white/50 text-sm max-w-2xl mx-auto">
                 This tool is for educational purposes only. Always do your own research before making trading decisions. 
-                <span className="text-yellow-300 font-semibold"> Past performance does not guarantee future results.</span>
+                <span className="text-red-300 font-semibold"> Past performance does not guarantee future results.</span>
               </p>
             </motion.div>
           </div>
