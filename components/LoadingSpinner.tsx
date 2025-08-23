@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Brain, Zap, Shield, Sparkles, BarChart3, TrendingUp } from 'lucide-react'
+import { Brain, Zap, Shield, Sparkles, BarChart3, TrendingUp, Flame } from 'lucide-react'
 
 const LoadingSpinner: React.FC = () => {
   const containerVariants = {
@@ -70,7 +70,7 @@ const LoadingSpinner: React.FC = () => {
           <motion.div
             variants={rotateVariants}
             animate="rotate"
-            className="absolute w-32 h-32 border-4 border-purple-500/30 rounded-full"
+            className="absolute w-32 h-32 border-4 border-red-500/30 rounded-full"
           />
           
           {/* Middle Ring */}
@@ -78,23 +78,23 @@ const LoadingSpinner: React.FC = () => {
             variants={rotateVariants}
             animate="rotate"
             style={{ animationDirection: 'reverse' }}
-            className="absolute w-24 h-24 border-4 border-cyan-500/30 rounded-full"
+            className="absolute w-24 h-24 border-4 border-orange-500/30 rounded-full"
           />
           
           {/* Inner Ring */}
           <motion.div
             variants={rotateVariants}
             animate="rotate"
-            className="absolute w-16 h-16 border-4 border-green-500/30 rounded-full"
+            className="absolute w-16 h-16 border-4 border-yellow-500/30 rounded-full"
           />
           
           {/* Center Icon */}
           <motion.div
             variants={pulseVariants}
             animate="pulse"
-            className="relative z-10 bg-gradient-to-r from-purple-600 to-cyan-600 p-4 rounded-full"
+            className="relative z-10 bg-gradient-to-r from-red-600 to-orange-600 p-4 rounded-full"
           >
-            <Brain size={32} className="text-white" />
+            <Flame size={32} className="text-white" />
           </motion.div>
         </div>
       </motion.div>
@@ -102,7 +102,7 @@ const LoadingSpinner: React.FC = () => {
       {/* Loading Text */}
       <motion.div variants={itemVariants} className="space-y-4">
         <motion.h2 
-          className="text-3xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent"
+          className="text-3xl font-bold bg-gradient-to-r from-white to-red-200 bg-clip-text text-transparent"
           animate={{
             opacity: [0.5, 1, 0.5],
           }}
@@ -139,21 +139,21 @@ const LoadingSpinner: React.FC = () => {
               icon: BarChart3,
               title: "Pattern Recognition",
               description: "Identifying chart patterns and trends",
-              color: "from-purple-500 to-cyan-500",
+              color: "from-red-500 to-orange-500",
               delay: 0
             },
             {
               icon: TrendingUp,
               title: "Signal Analysis",
               description: "Generating trading signals",
-              color: "from-green-500 to-blue-500",
+              color: "from-orange-500 to-yellow-500",
               delay: 1
             },
             {
               icon: Sparkles,
               title: "AI Processing",
               description: "Finalizing analysis results",
-              color: "from-yellow-500 to-orange-500",
+              color: "from-yellow-500 to-red-500",
               delay: 2
             }
           ].map((step, index) => (
@@ -187,7 +187,7 @@ const LoadingSpinner: React.FC = () => {
         {[0, 1, 2].map((index) => (
           <motion.div
             key={index}
-            className="w-3 h-3 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full"
+            className="w-3 h-3 bg-gradient-to-r from-red-400 to-orange-400 rounded-full"
             animate={{
               scale: [1, 1.5, 1],
               opacity: [0.5, 1, 0.5],
@@ -202,12 +202,12 @@ const LoadingSpinner: React.FC = () => {
         ))}
       </motion.div>
 
-      {/* Floating Particles */}
+      {/* Fiery Floating Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full"
+            className="fiery-particle"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -240,7 +240,7 @@ const LoadingSpinner: React.FC = () => {
             ease: "easeInOut"
           }}
         >
-          <Zap size={16} className="text-cyan-400" />
+          <Zap size={16} className="text-orange-400" />
           <span className="text-sm">Processing image data...</span>
         </motion.div>
         
@@ -256,7 +256,7 @@ const LoadingSpinner: React.FC = () => {
             delay: 1
           }}
         >
-          <Shield size={16} className="text-green-400" />
+          <Shield size={16} className="text-red-400" />
           <span className="text-sm">Analyzing market patterns...</span>
         </motion.div>
       </motion.div>

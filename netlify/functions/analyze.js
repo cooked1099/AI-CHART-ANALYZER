@@ -155,8 +155,8 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Enhanced analysis prompt with better pattern recognition
-    const analysisPrompt = `You are an expert trading chart analyst. Analyze this trading chart image and provide detailed analysis.
+    // Advanced analysis prompt with sophisticated pattern recognition
+    const analysisPrompt = `You are an expert trading chart analyst with deep knowledge of technical analysis, candlestick patterns, and market psychology. Analyze this trading chart image and provide comprehensive analysis.
 
 ANALYSIS REQUIREMENTS:
 
@@ -165,32 +165,53 @@ ANALYSIS REQUIREMENTS:
    - Check chart headers, titles, top sections, and any text labels
    - For Quotex charts, look for pairs like "USD/MXN (OTC)", "EUR/USD", etc.
    - Search in top-left, top-right, center, and any visible text areas
+   - Look for any trading platform indicators or symbols
 
 2. TIMEFRAME IDENTIFICATION:
    - Find chart timeframe indicators (M1, M5, M15, M30, H1, H4, D1, W1)
    - Look for timeframe buttons, selectors, or highlighted time periods
    - Check chart toolbar, time selector, or x-axis labels
    - Common timeframes: M1, M5, M15, M30, H1, H4, D1, W1
+   - Look for any timeframe-related text or buttons
 
-3. TREND ANALYSIS:
+3. TREND ANALYSIS (Technical Analysis):
    - Analyze recent candlestick patterns and price movement direction
    - Look at the last 10-20 candles to determine trend
    - Consider:
-     * Higher highs and higher lows = Bullish
-     * Lower highs and lower lows = Bearish
-     * Sideways movement = Sideways
-   - Check for any visible moving averages or trend lines
-   - Analyze candlestick body sizes and wick patterns
+     * Higher highs and higher lows = Bullish trend
+     * Lower highs and lower lows = Bearish trend
+     * Sideways movement with no clear direction = Sideways
+   - Check for any visible moving averages, trend lines, or support/resistance levels
+   - Analyze candlestick body sizes, wick patterns, and overall price structure
+   - Look for chart patterns like triangles, flags, head and shoulders, etc.
 
-4. SIGNAL GENERATION:
+4. SIGNAL GENERATION (Advanced Pattern Recognition):
    - Based on current chart patterns, predict the next likely direction
-   - Consider:
-     * Recent candlestick formations (doji, hammer, shooting star, etc.)
-     * Support and resistance levels
-     * Price momentum and volume patterns
-     * Chart patterns (head and shoulders, triangles, flags, etc.)
-   - Generate UP signal for bullish continuation or reversal
-   - Generate DOWN signal for bearish continuation or reversal
+   - Consider multiple technical factors:
+     * Recent candlestick formations (doji, hammer, shooting star, engulfing patterns)
+     * Support and resistance levels and their proximity
+     * Price momentum and volume patterns (if visible)
+     * Chart patterns (head and shoulders, triangles, flags, pennants, etc.)
+     * RSI, MACD, or other indicator readings (if visible)
+     * Market structure (higher highs/lows vs lower highs/lows)
+   - Generate UP signal for:
+     * Bullish continuation patterns
+     * Bullish reversal patterns (double bottom, bullish engulfing, etc.)
+     * Price breaking above resistance levels
+     * Strong bullish candlestick formations
+   - Generate DOWN signal for:
+     * Bearish continuation patterns
+     * Bearish reversal patterns (double top, bearish engulfing, etc.)
+     * Price breaking below support levels
+     * Strong bearish candlestick formations
+
+TECHNICAL ANALYSIS CONSIDERATIONS:
+- Look for key support and resistance levels
+- Identify trend lines and their direction
+- Analyze candlestick patterns for reversal or continuation signals
+- Consider market structure and price action
+- Look for any visible technical indicators
+- Assess overall market sentiment from the chart
 
 IMPORTANT INSTRUCTIONS:
 - Examine every part of the image carefully for trading information
@@ -199,6 +220,8 @@ IMPORTANT INSTRUCTIONS:
 - For trend analysis, focus on recent price action and candlestick patterns
 - For signal prediction, consider current market structure and recent formations
 - Be precise and accurate in your analysis
+- Consider multiple timeframes if visible
+- Look for any text, numbers, or indicators that could provide context
 
 RESPONSE FORMAT:
 PAIR: [exact trading pair name or "NOT VISIBLE"]
@@ -206,9 +229,9 @@ TIMEFRAME: [exact timeframe or "NOT VISIBLE"]
 TREND: [Bullish/Bearish/Sideways based on actual chart analysis]
 SIGNAL: [UP/DOWN based on current patterns and market structure]
 
-Provide your analysis based on what you can actually see in the chart image.`;
+Provide your analysis based on what you can actually see in the chart image. Be thorough in your technical analysis and pattern recognition.`;
 
-    console.log('Sending request to OpenAI for enhanced chart analysis...');
+    console.log('Sending request to OpenAI for advanced chart analysis...');
 
     // Call OpenAI Vision API with enhanced parameters
     const response = await openai.chat.completions.create({
@@ -230,7 +253,7 @@ Provide your analysis based on what you can actually see in the chart image.`;
           ]
         }
       ],
-      max_tokens: 600,
+      max_tokens: 800,
       temperature: 0.1, // Low temperature for consistent analysis
     });
 

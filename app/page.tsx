@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion'
-import { BarChart3, Zap, Shield, Brain, Sparkles, TrendingUp, Eye, Cpu, AlertCircle, Coins, Target, Rocket, ChartLine } from 'lucide-react'
+import { BarChart3, Zap, Shield, Brain, Sparkles, TrendingUp, Eye, Cpu, AlertCircle, Coins, Target, Rocket, ChartLine, Flame } from 'lucide-react'
 import FileUpload from '../components/FileUpload'
 import AnalysisResult from '../components/AnalysisResult'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -107,15 +107,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Enhanced Animated Background */}
+    <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 relative overflow-hidden">
+      {/* Enhanced Fiery Animated Background */}
       <div className="absolute inset-0">
-        {/* Gradient Orbs */}
+        {/* Fiery Gradient Orbs */}
         <motion.div 
-          className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-full blur-3xl"
+          className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-red-500/30 to-orange-500/30 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
+            opacity: [0.4, 0.8, 0.4],
           }}
           transition={{
             duration: 8,
@@ -125,10 +125,10 @@ export default function Home() {
           style={{ x, y }}
         />
         <motion.div 
-          className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-gradient-to-r from-blue-500/20 to-green-500/20 rounded-full blur-3xl"
+          className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-gradient-to-r from-orange-500/30 to-red-600/30 rounded-full blur-3xl"
           animate={{
             scale: [1.2, 1, 1.2],
-            opacity: [0.4, 0.7, 0.4],
+            opacity: [0.5, 0.9, 0.5],
           }}
           transition={{
             duration: 10,
@@ -139,10 +139,10 @@ export default function Home() {
           style={{ x: useTransform(x, value => -value * 0.5), y: useTransform(y, value => -value * 0.5) }}
         />
         <motion.div 
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-full blur-3xl"
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-red-600/20 to-orange-500/20 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.1, 1],
-            opacity: [0.2, 0.4, 0.2],
+            opacity: [0.3, 0.6, 0.3],
           }}
           transition={{
             duration: 12,
@@ -153,23 +153,23 @@ export default function Home() {
         />
       </div>
 
-      {/* Enhanced Floating Particles */}
+      {/* Enhanced Fiery Floating Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
+        {[...Array(40)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full"
+            className="fiery-particle"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -30, 0],
+              y: [0, -40, 0],
               opacity: [0, 1, 0],
-              scale: [0, 1, 0],
+              scale: [0, 1.5, 0],
             }}
             transition={{
-              duration: 4 + Math.random() * 3,
+              duration: 5 + Math.random() * 3,
               repeat: Infinity,
               delay: Math.random() * 4,
               ease: "easeInOut"
@@ -178,10 +178,10 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 opacity-10">
+      {/* Fiery Grid Pattern */}
+      <div className="absolute inset-0 opacity-15">
         <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,69,0,0.3) 1px, transparent 0)`,
           backgroundSize: '50px 50px'
         }} />
       </div>
@@ -211,14 +211,14 @@ export default function Home() {
                   }}
                   className="relative"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-3xl blur-xl opacity-60"></div>
-                  <div className="relative bg-gradient-to-r from-purple-600 to-cyan-600 p-4 rounded-3xl">
-                    <BarChart3 size={56} className="text-white" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-orange-400 rounded-3xl blur-xl opacity-60"></div>
+                  <div className="relative bg-gradient-to-r from-red-600 to-orange-600 p-4 rounded-3xl">
+                    <Flame size={56} className="text-white" />
                   </div>
                 </motion.div>
                 <div className="space-y-2">
                   <motion.h1 
-                    className="text-6xl md:text-8xl font-black bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent"
+                    className="text-6xl md:text-8xl font-black bg-gradient-to-r from-white via-red-200 to-orange-200 bg-clip-text text-transparent"
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 1, delay: 0.3 }}
@@ -226,7 +226,7 @@ export default function Home() {
                     Trading Chart
                   </motion.h1>
                   <motion.h2 
-                    className="text-4xl md:text-6xl font-black bg-gradient-to-r from-cyan-200 to-purple-200 bg-clip-text text-transparent"
+                    className="text-4xl md:text-6xl font-black bg-gradient-to-r from-orange-200 to-red-200 bg-clip-text text-transparent"
                     initial={{ opacity: 0, x: 50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 1, delay: 0.5 }}
@@ -243,9 +243,9 @@ export default function Home() {
                 className="text-2xl md:text-3xl text-white/90 max-w-4xl mx-auto leading-relaxed font-light"
               >
                 Advanced AI-powered analysis with 
-                <span className="text-cyan-300 font-semibold mx-2">real-time pattern recognition</span>, 
-                <span className="text-purple-300 font-semibold mx-2">precise signal generation</span>, and
-                <span className="text-green-300 font-semibold mx-2">market trend analysis</span>
+                <span className="text-orange-300 font-semibold mx-2">real-time pattern recognition</span>, 
+                <span className="text-red-300 font-semibold mx-2">precise signal generation</span>, and
+                <span className="text-yellow-300 font-semibold mx-2">market trend analysis</span>
               </motion.p>
             </motion.div>
 
@@ -261,21 +261,21 @@ export default function Home() {
                   icon: Brain,
                   title: "AI Analysis",
                   description: "GPT-4 Vision powered pattern recognition",
-                  gradient: "from-purple-500 to-cyan-500",
-                  color: "text-cyan-300"
+                  gradient: "from-red-500 to-orange-500",
+                  color: "text-orange-300"
                 },
                 {
                   icon: Zap,
                   title: "Instant Results",
                   description: "Real-time processing in milliseconds",
-                  gradient: "from-green-500 to-blue-500",
-                  color: "text-green-300"
+                  gradient: "from-orange-500 to-yellow-500",
+                  color: "text-yellow-300"
                 },
                 {
                   icon: Shield,
                   title: "Secure",
                   description: "Enterprise-grade encryption & privacy",
-                  gradient: "from-red-500 to-pink-500",
+                  gradient: "from-red-600 to-pink-500",
                   color: "text-red-300"
                 },
                 {
@@ -283,7 +283,7 @@ export default function Home() {
                   title: "Advanced",
                   description: "Multi-timeframe signal analysis",
                   gradient: "from-yellow-500 to-orange-500",
-                  color: "text-yellow-300"
+                  color: "text-orange-300"
                 }
               ].map((feature, index) => (
                 <motion.div 
@@ -396,7 +396,7 @@ export default function Home() {
                     >
                       <button
                         onClick={handleRetry}
-                        className="px-10 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-purple-500/25"
+                        className="px-10 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-red-500/25"
                       >
                         Try Again
                       </button>
@@ -432,8 +432,8 @@ export default function Home() {
                       >
                         <div className="flex items-center space-x-4 mb-8">
                           <div className="relative">
-                            <div className="absolute inset-0 bg-cyan-500/20 rounded-full blur-lg"></div>
-                            <Eye size={32} className="relative text-cyan-300" />
+                            <div className="absolute inset-0 bg-orange-500/20 rounded-full blur-lg"></div>
+                            <Eye size={32} className="relative text-orange-300" />
                           </div>
                           <h3 className="text-2xl font-bold text-white">Uploaded Chart</h3>
                         </div>
@@ -472,8 +472,8 @@ export default function Home() {
                     >
                       <div className="flex items-center space-x-4 mb-8">
                         <div className="relative">
-                          <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-lg"></div>
-                          <Cpu size={32} className="relative text-purple-300" />
+                          <div className="absolute inset-0 bg-red-500/20 rounded-full blur-lg"></div>
+                          <Cpu size={32} className="relative text-red-300" />
                         </div>
                         <h3 className="text-2xl font-bold text-white">Analysis Details</h3>
                       </div>
@@ -524,9 +524,9 @@ export default function Home() {
             >
               <p className="text-white/70 text-xl">
                 © 2024 Trading Chart Analyzer. Built with 
-                <span className="text-cyan-300 font-semibold mx-2">Next.js</span>, 
-                <span className="text-purple-300 font-semibold mx-2">OpenAI</span>, and 
-                <span className="text-green-300 font-semibold mx-2">Tailwind CSS</span>.
+                <span className="text-orange-300 font-semibold mx-2">Next.js</span>, 
+                <span className="text-red-300 font-semibold mx-2">OpenAI</span>, and 
+                <span className="text-yellow-300 font-semibold mx-2">Tailwind CSS</span>.
               </p>
               <p className="text-white/50 text-base max-w-3xl mx-auto leading-relaxed">
                 This tool is for educational purposes only. Always do your own research before making trading decisions. 

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown, Eye, EyeOff, Target, Zap, BarChart3, Clock, Coins } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown, Eye, EyeOff, Target, Zap, BarChart3, Clock, Coins, Flame } from 'lucide-react'
 
 interface AnalysisData {
   PAIR: string
@@ -88,7 +88,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
     return (
       <div className="flex items-center space-x-3">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-lg opacity-30"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full blur-lg opacity-30"></div>
           <icon size={20} className="relative text-white" />
         </div>
         <span className="text-white font-bold text-lg">{value}</span>
@@ -142,12 +142,12 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
           className="flex items-center justify-center space-x-3"
         >
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-500 rounded-full blur-xl opacity-40"></div>
-            <div className="relative bg-gradient-to-r from-green-600 to-blue-600 p-4 rounded-full">
-              <Target size={32} className="text-white" />
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full blur-xl opacity-40"></div>
+            <div className="relative bg-gradient-to-r from-red-600 to-orange-600 p-4 rounded-full">
+              <Flame size={32} className="text-white" />
             </div>
           </div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-white to-red-200 bg-clip-text text-transparent">
             Analysis Complete
           </h2>
         </motion.div>
@@ -166,8 +166,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
           <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-lg opacity-30"></div>
-                <Coins size={24} className="relative text-purple-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full blur-lg opacity-30"></div>
+                <Coins size={24} className="relative text-red-300" />
               </div>
               <span className="text-white/70 font-semibold text-lg">Trading Pair</span>
             </div>
@@ -178,8 +178,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
           <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-green-500 rounded-full blur-lg opacity-30"></div>
-                <Clock size={24} className="relative text-blue-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full blur-lg opacity-30"></div>
+                <Clock size={24} className="relative text-orange-300" />
               </div>
               <span className="text-white/70 font-semibold text-lg">Timeframe</span>
             </div>
@@ -190,8 +190,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
           <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-yellow-500 rounded-full blur-lg opacity-30"></div>
-                <BarChart3 size={24} className="relative text-green-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-red-500 rounded-full blur-lg opacity-30"></div>
+                <BarChart3 size={24} className="relative text-yellow-300" />
               </div>
               <span className="text-white/70 font-semibold text-lg">Current Trend</span>
             </div>
@@ -207,7 +207,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
           <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-full blur-lg opacity-30"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-500 rounded-full blur-lg opacity-30"></div>
                 <Zap size={24} className="relative text-red-300" />
               </div>
               <span className="text-white/70 font-semibold text-lg">Trading Signal</span>
@@ -307,7 +307,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
           onClick={onNewAnalysis}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-gradient-to-r from-trading-green to-trading-blue hover:from-trading-blue hover:to-trading-green text-white font-bold py-4 px-10 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-green-500/25"
+          className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold py-4 px-10 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-red-500/25"
         >
           New Analysis
         </motion.button>

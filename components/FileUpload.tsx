@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, FileImage, X, CheckCircle, AlertCircle, Sparkles, Zap } from 'lucide-react'
+import { Upload, FileImage, X, CheckCircle, AlertCircle, Sparkles, Zap, Flame } from 'lucide-react'
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void
@@ -128,12 +128,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
             }}
             className="relative"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-lg opacity-40"></div>
-            <div className="relative bg-gradient-to-r from-purple-600 to-cyan-600 p-3 rounded-full">
-              <Sparkles size={32} className="text-white" />
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full blur-lg opacity-40"></div>
+            <div className="relative bg-gradient-to-r from-red-600 to-orange-600 p-3 rounded-full">
+              <Flame size={32} className="text-white" />
             </div>
           </motion.div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-white to-red-200 bg-clip-text text-transparent">
             Upload Trading Chart
           </h2>
         </div>
@@ -148,7 +148,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
         <div
           className={`relative border-3 border-dashed rounded-3xl p-12 transition-all duration-500 ${
             isDragOver 
-              ? 'border-cyan-400 bg-cyan-500/10 scale-105' 
+              ? 'border-orange-400 bg-orange-500/10 scale-105' 
               : 'border-white/30 hover:border-white/50 hover:bg-white/5'
           }`}
           onDragOver={handleDragOver}
@@ -163,7 +163,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
             className="absolute inset-0 rounded-3xl"
             animate={{
               background: isDragOver 
-                ? "linear-gradient(45deg, #00D4AA, #667eea, #00D4AA)" 
+                ? "linear-gradient(45deg, #ff4500, #ff6347, #ff4500)" 
                 : "linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05), rgba(255,255,255,0.1))"
             }}
             transition={{ duration: 0.5 }}
@@ -183,8 +183,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
                   className="flex justify-center"
                 >
                   <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full blur-xl opacity-30"></div>
-                    <div className="relative bg-gradient-to-r from-purple-600 to-cyan-600 p-6 rounded-full">
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-full blur-xl opacity-30"></div>
+                    <div className="relative bg-gradient-to-r from-red-600 to-orange-600 p-6 rounded-full">
                       <Upload size={48} className="text-white" />
                     </div>
                   </div>
@@ -224,7 +224,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-purple-500/25"
+                  className="px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-bold rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-red-500/25"
                 >
                   Browse Files
                 </motion.button>
@@ -324,8 +324,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect }) => {
             className="glassmorphism rounded-2xl p-6 text-center group hover:scale-105 transition-all duration-300"
           >
             <div className="relative mb-4">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
-              <feature.icon size={32} className="relative text-cyan-300 mx-auto" />
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
+              <feature.icon size={32} className="relative text-orange-300 mx-auto" />
             </div>
             <h3 className="font-bold text-white text-lg mb-2">{feature.title}</h3>
             <p className="text-white/70 text-sm">{feature.description}</p>
