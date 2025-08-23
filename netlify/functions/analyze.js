@@ -1,16 +1,6 @@
-const OpenAI = require('openai');
+import fetch from "node-fetch";
 
-// Initialize OpenAI client with better error handling
-let openai;
-try {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || '',
-  });
-} catch (error) {
-  console.error('Failed to initialize OpenAI:', error);
-}
-
-exports.handler = async (event, context) => {
+export async function handler(event, context) {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -23,173 +13,135 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers,
-      body: '',
-    };
-  }
-
-  // Check if OpenAI is properly initialized
-  if (!openai) {
-    return {
-      statusCode: 500,
-      headers: { ...headers, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        success: false,
-        error: 'OpenAI service not available',
-        analysis: null
-      })
+      body: ''
     };
   }
 
   try {
-    // Check if content-type header exists
-    if (!event.headers || !event.headers['content-type']) {
+    console.log('Function triggered with method:', event.httpMethod);
+    console.log('Content-Type:', event.headers['content-type']);
+    console.log('Body length:', event.body ? event.body.length : 0);
+
+    // Check if OpenAI API key is available
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    if (!openaiApiKey) {
+      console.error('OpenAI API key not found in environment variables');
       return {
-        statusCode: 400,
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        statusCode: 500,
+        headers,
         body: JSON.stringify({
           success: false,
-          error: 'Content-Type header is missing',
+          error: 'OpenAI API key not configured',
           analysis: null
         })
       };
     }
 
-    // Parse multipart form data with better error handling
-    const contentType = event.headers['content-type'];
-    console.log('Content-Type:', contentType);
-    
-    // Handle both multipart/form-data and application/x-www-form-urlencoded
-    let boundary = null;
-    
+    // Parse multipart form data
+    let fileData = null;
+    let contentType = event.headers['content-type'] || '';
+
     if (contentType.includes('multipart/form-data')) {
+      console.log('Processing multipart form data...');
+      
+      // Extract boundary from content-type
       const boundaryMatch = contentType.match(/boundary=(.+)$/);
       if (!boundaryMatch) {
+        console.error('No boundary found in content-type');
         return {
           statusCode: 400,
-          headers: { ...headers, 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             success: false,
-            error: 'Invalid multipart form data: boundary not found',
+            error: 'Invalid multipart form data: no boundary found',
             analysis: null
           })
         };
       }
-      boundary = boundaryMatch[1];
-    } else {
-      return {
-        statusCode: 400,
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'Expected multipart/form-data content type',
-          analysis: null
-        })
-      };
-    }
 
-    const body = event.body;
-    
-    if (!body) {
-      return {
-        statusCode: 400,
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'No request body provided',
-          analysis: null
-        })
-      };
-    }
+      const boundary = boundaryMatch[1];
+      console.log('Boundary:', boundary);
 
-    console.log('Body length:', body.length);
-    console.log('Boundary:', boundary);
+      // Parse the multipart body
+      const body = event.body;
+      if (!body) {
+        console.error('No body found in request');
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: 'No request body found',
+            analysis: null
+          })
+        };
+      }
 
-    // Simple multipart parsing for the file
-    const parts = body.split('--' + boundary);
-    let fileData = null;
-    let fileName = null;
-    let fileType = null;
+      // Split by boundary
+      const parts = body.split(`--${boundary}`);
+      console.log('Number of parts:', parts.length);
 
-    for (const part of parts) {
-      if (part.includes('Content-Disposition: form-data')) {
-        if (part.includes('name="file"')) {
+      for (const part of parts) {
+        if (part.includes('Content-Disposition: form-data') && part.includes('name="file"')) {
+          // Extract the file data
           const lines = part.split('\r\n');
+          let dataStart = -1;
+          
           for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes('Content-Disposition: form-data')) {
-              // Extract filename and content type
-              const disposition = lines[i];
-              const nameMatch = disposition.match(/name="([^"]+)"/);
-              const filenameMatch = disposition.match(/filename="([^"]+)"/);
-              
-              if (nameMatch && nameMatch[1] === 'file' && filenameMatch) {
-                fileName = filenameMatch[1];
-                // Find content type
-                for (let j = i + 1; j < lines.length; j++) {
-                  if (lines[j].includes('Content-Type:')) {
-                    fileType = lines[j].split(': ')[1];
-                    break;
-                  }
-                }
-                // Get file data (everything after the headers)
-                const dataStart = part.indexOf('\r\n\r\n') + 4;
-                const dataEnd = part.lastIndexOf('\r\n');
-                if (dataStart > 3 && dataEnd > dataStart) {
-                  fileData = part.substring(dataStart, dataEnd);
-                }
-                break;
-              }
+            if (lines[i] === '') {
+              dataStart = i + 1;
+              break;
             }
+          }
+          
+          if (dataStart > 0) {
+            fileData = lines.slice(dataStart).join('\r\n').trim();
+            // Remove the trailing boundary
+            if (fileData.endsWith('--')) {
+              fileData = fileData.slice(0, -2);
+            }
+            break;
           }
         }
       }
-    }
 
-    if (!fileData) {
+      if (!fileData) {
+        console.error('No file data found in multipart form');
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            error: 'No file data found in request',
+            analysis: null
+          })
+        };
+      }
+
+      console.log('File data extracted, length:', fileData.length);
+    } else {
+      console.error('Unsupported content type:', contentType);
       return {
         statusCode: 400,
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           success: false,
-          error: 'No file data found in request',
+          error: 'Unsupported content type. Please use multipart/form-data',
           analysis: null
         })
       };
     }
 
-    console.log('File received:', fileName, fileType, fileData.length);
-
-    // Validate file data
-    if (fileData.length === 0) {
-      return {
-        statusCode: 400,
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'File data is empty',
-          analysis: null
-        })
-      };
+    // Convert base64 to proper format if needed
+    let base64Data = fileData;
+    if (!fileData.startsWith('data:')) {
+      // If it's raw base64, add the data URL prefix
+      base64Data = `data:image/jpeg;base64,${fileData}`;
     }
 
-    // Convert base64 to buffer
-    let buffer;
-    try {
-      buffer = Buffer.from(fileData, 'base64');
-    } catch (error) {
-      return {
-        statusCode: 400,
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          success: false,
-          error: 'Invalid file data format',
-          analysis: null
-        })
-      };
-    }
+    console.log('Prepared base64 data, length:', base64Data.length);
 
-    console.log('Image converted to base64, length:', fileData.length);
-
-    // Enhanced analysis prompt with better instructions
+    // Enhanced analysis prompt
     const analysisPrompt = `
     You are a professional trading chart analyst. Analyze this trading chart screenshot and extract the EXACT information visible in the image.
 
@@ -243,40 +195,62 @@ exports.handler = async (event, context) => {
     - Do not use placeholder or default values unless absolutely necessary
     `;
 
-    console.log('Sending request to OpenAI with enhanced prompt...');
+    console.log('Calling OpenAI API...');
 
-    // Call OpenAI Vision API with higher token limit for better analysis
-    const response = await openai.chat.completions.create({
-      model: "gpt-4-vision-preview",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: analysisPrompt
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${fileType};base64,${fileData}`
+    // Call OpenAI Vision API
+    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4-vision-preview",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: analysisPrompt
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: base64Data
+                }
               }
-            }
-          ]
-        }
-      ],
-      max_tokens: 1000,
-      temperature: 0.1, // Low temperature for more consistent results
+            ]
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.1
+      })
     });
 
-    const analysisResult = response.choices[0]?.message?.content;
+    if (!openaiResponse.ok) {
+      const errorText = await openaiResponse.text();
+      console.error('OpenAI API error:', openaiResponse.status, errorText);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: `OpenAI API error: ${openaiResponse.status}`,
+          analysis: null
+        })
+      };
+    }
 
-    console.log('AI Response:', analysisResult);
+    const openaiData = await openaiResponse.json();
+    const analysisResult = openaiData.choices?.[0]?.message?.content;
+
+    console.log('OpenAI Response:', analysisResult);
 
     if (!analysisResult) {
       return {
         statusCode: 500,
-        headers: { ...headers, 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           success: false,
           error: 'No response from AI service',
@@ -285,7 +259,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // Parse the result to ensure it's in the correct format
+    // Parse the result
     const lines = analysisResult.trim().split('\n');
     const result = {};
 
@@ -307,11 +281,10 @@ exports.handler = async (event, context) => {
         if (field === 'PAIR' || field === 'TIMEFRAME') {
           result[field] = 'Not visible';
         } else {
-          // For TREND and SIGNAL, we need to provide analysis
           if (field === 'TREND') {
-            result[field] = 'Sideways'; // Default to sideways if unclear
+            result[field] = 'Sideways';
           } else if (field === 'SIGNAL') {
-            result[field] = 'NEUTRAL'; // Default to neutral if unclear
+            result[field] = 'NEUTRAL';
           }
         }
       } else {
@@ -347,11 +320,10 @@ exports.handler = async (event, context) => {
 
     return {
       statusCode: 200,
-      headers: { ...headers, 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         success: true,
         analysis: result,
-        rawResponse: analysisResult,
         debug: {
           hasValidData,
           originalResponse: analysisResult,
@@ -361,16 +333,16 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('Analysis error:', error);
+    console.error('Function error:', error);
     
     return {
       statusCode: 500,
-      headers: { ...headers, 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         success: false,
-        error: 'Analysis failed: ' + (error.message || 'Unknown error'),
+        error: 'Analysis failed: ' + error.message,
         analysis: null
       })
     };
   }
-};
+}

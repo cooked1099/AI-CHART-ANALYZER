@@ -42,39 +42,20 @@ export default function Home() {
       const formData = new FormData()
       formData.append('file', file)
 
-      // Try multiple endpoints for different deployment scenarios
-      const endpoints = [
-        '/.netlify/functions/analyze',
-        '/api/analyze',
-        '/analyze'
-      ]
+      console.log('Uploading file:', file.name, file.type, file.size)
 
-      let response = null
-      let lastError = null
+      const response = await fetch('/.netlify/functions/analyze', {
+        method: 'POST',
+        body: formData,
+      })
 
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`Trying endpoint: ${endpoint}`)
-          response = await fetch(endpoint, {
-            method: 'POST',
-            body: formData,
-          })
-          
-          if (response.ok) {
-            console.log(`Success with endpoint: ${endpoint}`)
-            break
-          } else {
-            console.log(`Failed with endpoint: ${endpoint}, status: ${response.status}`)
-            lastError = `HTTP ${response.status}: ${response.statusText}`
-          }
-        } catch (error) {
-          console.log(`Error with endpoint: ${endpoint}`, error)
-          lastError = error instanceof Error ? error.message : 'Unknown error'
-        }
-      }
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
 
-      if (!response || !response.ok) {
-        throw new Error(lastError || 'All endpoints failed')
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Response error:', errorText)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
