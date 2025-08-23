@@ -1,6 +1,6 @@
 const OpenAI = require('openai');
 
-// Initialize OpenAI client with better error handling
+// Initialize OpenAI client
 let openai;
 try {
   openai = new OpenAI({
@@ -8,6 +8,64 @@ try {
   });
 } catch (error) {
   console.error('Failed to initialize OpenAI:', error);
+}
+
+// Helper function to parse multipart form data more reliably
+function parseMultipartFormData(body, boundary) {
+  const parts = body.split('--' + boundary);
+  let fileData = null;
+  let fileName = null;
+  let fileType = null;
+
+  for (const part of parts) {
+    if (part.includes('Content-Disposition: form-data') && part.includes('name="file"')) {
+      const lines = part.split('\r\n');
+      
+      // Extract filename and content type
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.includes('Content-Disposition: form-data')) {
+          const filenameMatch = line.match(/filename="([^"]+)"/);
+          if (filenameMatch) {
+            fileName = filenameMatch[1];
+          }
+        } else if (line.includes('Content-Type:')) {
+          fileType = line.split(': ')[1];
+        }
+      }
+      
+      // Extract file data (everything after the headers)
+      const dataStart = part.indexOf('\r\n\r\n') + 4;
+      const dataEnd = part.lastIndexOf('\r\n');
+      if (dataStart > 3 && dataEnd > dataStart) {
+        fileData = part.substring(dataStart, dataEnd);
+      }
+      break;
+    }
+  }
+
+  return { fileData, fileName, fileType };
+}
+
+// Helper function to parse AI response
+function parseAIResponse(response) {
+  if (!response) return null;
+  
+  const lines = response.trim().split('\n');
+  const result = {};
+  
+  lines.forEach(line => {
+    const colonIndex = line.indexOf(':');
+    if (colonIndex > 0) {
+      const key = line.substring(0, colonIndex).trim();
+      const value = line.substring(colonIndex + 1).trim().replace(/"/g, '');
+      if (key && value) {
+        result[key] = value;
+      }
+    }
+  });
+  
+  return result;
 }
 
 exports.handler = async (event, context) => {
@@ -30,142 +88,98 @@ exports.handler = async (event, context) => {
   // Check if OpenAI is properly initialized
   if (!openai) {
     return {
-      statusCode: 200,
+      statusCode: 500,
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        success: true,
-        analysis: {
-          PAIR: 'BTC/USDT',
-          TIMEFRAME: 'H1',
-          TREND: 'Bullish',
-          SIGNAL: 'UP'
-        },
-        debug: 'OpenAI not initialized'
+        success: false,
+        error: 'OpenAI not initialized. Please check API key configuration.',
+        analysis: null
       })
     };
   }
 
   try {
     // Parse multipart form data
-    const boundary = event.headers['content-type'].split('boundary=')[1];
-    const body = event.body;
-    
-    // Simple multipart parsing for the file
-    const parts = body.split('--' + boundary);
-    let fileData = null;
-    let fileName = null;
-    let fileType = null;
-
-    for (const part of parts) {
-      if (part.includes('Content-Disposition: form-data')) {
-        if (part.includes('name="file"')) {
-          const lines = part.split('\r\n');
-          for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes('Content-Disposition: form-data')) {
-              // Extract filename and content type
-              const disposition = lines[i];
-              const nameMatch = disposition.match(/name="([^"]+)"/);
-              const filenameMatch = disposition.match(/filename="([^"]+)"/);
-              
-              if (nameMatch && nameMatch[1] === 'file' && filenameMatch) {
-                fileName = filenameMatch[1];
-                // Find content type
-                for (let j = i + 1; j < lines.length; j++) {
-                  if (lines[j].includes('Content-Type:')) {
-                    fileType = lines[j].split(': ')[1];
-                    break;
-                  }
-                }
-                // Get file data (everything after the headers)
-                const dataStart = part.indexOf('\r\n\r\n') + 4;
-                const dataEnd = part.lastIndexOf('\r\n');
-                if (dataStart > 3 && dataEnd > dataStart) {
-                  fileData = part.substring(dataStart, dataEnd);
-                }
-                break;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    if (!fileData) {
+    const contentType = event.headers['content-type'] || '';
+    if (!contentType.includes('multipart/form-data')) {
       return {
-        statusCode: 200,
+        statusCode: 400,
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          success: true,
-          analysis: {
-            PAIR: 'BTC/USDT',
-            TIMEFRAME: 'H1',
-            TREND: 'Bullish',
-            SIGNAL: 'UP'
-          },
-          debug: 'No file data found'
+          success: false,
+          error: 'Invalid content type. Expected multipart/form-data.',
+          analysis: null
         })
       };
     }
 
-    console.log('File received:', fileName, fileType, fileData.length);
+    const boundary = contentType.split('boundary=')[1];
+    if (!boundary) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'No boundary found in content type.',
+          analysis: null
+        })
+      };
+    }
 
-    // Convert base64 to buffer
-    const buffer = Buffer.from(fileData, 'base64');
+    const { fileData, fileName, fileType } = parseMultipartFormData(event.body, boundary);
 
-    console.log('Image converted to base64, length:', fileData.length);
+    if (!fileData) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'No file data found in request.',
+          analysis: null
+        })
+      };
+    }
 
-    // Create a much more aggressive and specific analysis prompt
-    const analysisPrompt = `
-    CRITICAL: You MUST analyze this trading chart screenshot and extract the EXACT information shown in the image. DO NOT guess or use defaults.
+    console.log('Processing file:', fileName, 'Type:', fileType, 'Size:', fileData.length);
 
-    STEP-BY-STEP ANALYSIS REQUIRED:
+    // Validate file type
+    if (!fileType || !fileType.startsWith('image/')) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Invalid file type. Please upload an image file.',
+          analysis: null
+        })
+      };
+    }
 
-    1. PAIR DETECTION:
-       - Look at the chart header, title, or top of the screen
-       - Search for the trading pair name (e.g., "USD/MXN", "EUR/USD", "BTC/USDT")
-       - For Quotex charts, look for pairs like "USD/MXN (OTC)", "EUR/USD", etc.
-       - If you see "USD?MXN (OTC)", return "USD/MXN (OTC)"
-       - Look in the top-left, top-right, or center of the chart
-       - Check any text labels, buttons, or headers
+    // Create a focused and clear analysis prompt
+    const analysisPrompt = `Analyze this trading chart image and extract the following information:
 
-    2. TIMEFRAME DETECTION:
-       - Look for timeframe buttons or selectors (M1, M5, M15, M30, H1, H4, D1)
-       - Check the chart toolbar, time selector, or buttons
-       - Look for highlighted or selected timeframe
-       - Check the x-axis labels or chart settings
-       - For Quotex, common timeframes are M1, M5, M15, M30, H1, H4, D1
+1. TRADING PAIR: Look for the currency pair or trading instrument name (e.g., "USD/MXN", "EUR/USD", "BTC/USDT", "GBP/JPY")
+2. TIMEFRAME: Find the chart timeframe (e.g., "M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1")
+3. CURRENT TREND: Analyze the price movement direction (Bullish, Bearish, or Sideways)
+4. TRADING SIGNAL: Based on the current chart patterns, predict the next likely direction (UP or DOWN)
 
-    3. TREND ANALYSIS:
-       - Look at the actual candlestick patterns and price movement
-       - Analyze the direction of recent candles
-       - Check if price is moving up, down, or sideways
-       - Look at any moving averages or trend lines
+IMPORTANT INSTRUCTIONS:
+- Look carefully at all text labels, headers, and buttons in the image
+- Analyze the actual candlestick patterns and price movement
+- If you cannot clearly see any information, say "NOT VISIBLE" for that field
+- Do not guess or make assumptions - only report what you can actually see
+- For trend analysis, look at recent price action and candlestick formations
+- For signal prediction, consider current market structure and recent patterns
 
-    4. SIGNAL PREDICTION:
-       - Based on the current chart patterns, predict next candle
-       - Look at recent candlestick formations
-       - Consider support/resistance levels
+Please respond in this exact format:
+PAIR: [trading pair name or "NOT VISIBLE"]
+TIMEFRAME: [timeframe or "NOT VISIBLE"]
+TREND: [Bullish/Bearish/Sideways based on actual chart analysis]
+SIGNAL: [UP/DOWN based on current patterns]`;
 
-    IMPORTANT RULES:
-    - You MUST read the actual text and numbers in the image
-    - DO NOT use "Unknown" unless you absolutely cannot see the information
-    - If you can see the pair name, use the EXACT text you see
-    - If you can see the timeframe, use the EXACT timeframe shown
-    - Look very carefully at every part of the image
-    - This is a real trading chart - analyze it properly
+    console.log('Sending request to OpenAI for chart analysis...');
 
-    Return ONLY in this exact format:
-    PAIR: "[exact pair name from the chart]"
-    TIMEFRAME: "[exact timeframe from the chart]"
-    TREND: "[Bullish/Bearish/Sideways based on actual chart analysis]"
-    SIGNAL: "[UP/DOWN based on current patterns]"
-
-    If you cannot see any information clearly, say so in your response.
-    `;
-
-    console.log('Sending request to OpenAI with enhanced prompt...');
-
-    // Call OpenAI Vision API with higher token limit for better analysis
+    // Call OpenAI Vision API
     const response = await openai.chat.completions.create({
       model: "gpt-4-vision-preview",
       messages: [
@@ -185,82 +199,83 @@ exports.handler = async (event, context) => {
           ]
         }
       ],
-      max_tokens: 800,
-      temperature: 0.0, // Zero temperature for most deterministic results
+      max_tokens: 500,
+      temperature: 0.1, // Low temperature for consistent analysis
     });
 
-    const analysisResult = response.choices[0]?.message?.content;
+    const aiResponse = response.choices[0]?.message?.content;
+    console.log('AI Response:', aiResponse);
 
-    console.log('AI Response:', analysisResult);
-
-    if (!analysisResult) {
-      console.log('No AI response received, using defaults');
+    if (!aiResponse) {
       return {
-        statusCode: 200,
+        statusCode: 500,
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          success: true,
-          analysis: {
-            PAIR: 'BTC/USDT',
-            TIMEFRAME: 'H1',
-            TREND: 'Bullish',
-            SIGNAL: 'UP'
-          },
-          debug: 'No AI response'
+          success: false,
+          error: 'No response received from AI analysis.',
+          analysis: null
         })
       };
     }
 
-    // Parse the result to ensure it's in the correct format
-    const lines = analysisResult.trim().split('\n');
-    const result = {};
+    // Parse the AI response
+    const parsedResult = parseAIResponse(aiResponse);
+    console.log('Parsed Result:', parsedResult);
 
-    lines.forEach(line => {
-      const [key, value] = line.split(':').map(s => s.trim());
-      if (key && value) {
-        result[key] = value.replace(/"/g, '');
-      }
-    });
+    if (!parsedResult || Object.keys(parsedResult).length === 0) {
+      return {
+        statusCode: 500,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Failed to parse AI response.',
+          analysis: null,
+          rawResponse: aiResponse
+        })
+      };
+    }
 
-    console.log('Parsed Result:', result);
-
-    // Only use defaults if the AI truly couldn't detect something
+    // Validate and clean the parsed result
     const requiredFields = ['PAIR', 'TIMEFRAME', 'TREND', 'SIGNAL'];
-    let usedDefaults = false;
-    
+    const cleanedResult = {};
+    let hasValidData = false;
+
     requiredFields.forEach(field => {
-      if (!result[field] || result[field] === 'Unknown' || result[field] === '' || result[field].toLowerCase().includes('cannot')) {
-        usedDefaults = true;
-        switch (field) {
-          case 'PAIR':
-            result[field] = 'BTC/USDT';
-            break;
-          case 'TIMEFRAME':
-            result[field] = 'H1';
-            break;
-          case 'TREND':
-            result[field] = 'Bullish';
-            break;
-          case 'SIGNAL':
-            result[field] = 'UP';
-            break;
-        }
+      const value = parsedResult[field];
+      if (value && value !== 'NOT VISIBLE' && value.trim() !== '') {
+        cleanedResult[field] = value.trim();
+        hasValidData = true;
+      } else {
+        cleanedResult[field] = 'NOT VISIBLE';
       }
     });
 
-    console.log('Final Result:', result, 'Used defaults:', usedDefaults);
+    // If no valid data was extracted, return an error
+    if (!hasValidData) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Could not extract any valid information from the chart image. Please ensure the image is clear and contains visible trading information.',
+          analysis: null,
+          rawResponse: aiResponse
+        })
+      };
+    }
+
+    console.log('Final Analysis Result:', cleanedResult);
 
     return {
       statusCode: 200,
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: true,
-        analysis: result,
-        rawResponse: analysisResult,
+        analysis: cleanedResult,
         debug: {
-          usedDefaults,
-          originalResponse: analysisResult,
-          parsedResult: result
+          originalResponse: aiResponse,
+          parsedResult: parsedResult,
+          hasValidData: hasValidData
         }
       })
     };
@@ -269,17 +284,12 @@ exports.handler = async (event, context) => {
     console.error('Analysis error:', error);
     
     return {
-      statusCode: 200,
+      statusCode: 500,
       headers: { ...headers, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        success: true,
-        analysis: {
-          PAIR: 'BTC/USDT',
-          TIMEFRAME: 'H1',
-          TREND: 'Bullish',
-          SIGNAL: 'UP'
-        },
-        debug: 'Error occurred: ' + (error.message || 'Unknown error')
+        success: false,
+        error: `Analysis failed: ${error.message}`,
+        analysis: null
       })
     };
   }

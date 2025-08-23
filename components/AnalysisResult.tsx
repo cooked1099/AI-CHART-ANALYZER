@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react'
 
 interface AnalysisData {
   PAIR: string
@@ -18,6 +18,8 @@ interface AnalysisResultProps {
 
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis }) => {
   const getTrendIcon = (trend: string) => {
+    if (trend === 'NOT VISIBLE') return <EyeOff className="text-gray-400" size={20} />
+    
     switch (trend.toLowerCase()) {
       case 'bullish':
         return <TrendingUp className="text-trading-green" size={20} />
@@ -26,22 +28,26 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       case 'sideways':
         return <Minus className="text-trading-blue" size={20} />
       default:
-        return null
+        return <EyeOff className="text-gray-400" size={20} />
     }
   }
 
   const getSignalIcon = (signal: string) => {
+    if (signal === 'NOT VISIBLE') return <EyeOff className="text-gray-400" size={20} />
+    
     switch (signal.toLowerCase()) {
       case 'up':
         return <ArrowUp className="signal-up" size={20} />
       case 'down':
         return <ArrowDown className="signal-down" size={20} />
       default:
-        return null
+        return <EyeOff className="text-gray-400" size={20} />
     }
   }
 
   const getTrendClass = (trend: string) => {
+    if (trend === 'NOT VISIBLE') return 'text-gray-400'
+    
     switch (trend.toLowerCase()) {
       case 'bullish':
         return 'trend-bullish'
@@ -55,6 +61,8 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
   }
 
   const getSignalClass = (signal: string) => {
+    if (signal === 'NOT VISIBLE') return 'text-gray-400'
+    
     switch (signal.toLowerCase()) {
       case 'up':
         return 'signal-up'
@@ -63,6 +71,18 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       default:
         return 'text-white'
     }
+  }
+
+  const getValueDisplay = (value: string, label: string) => {
+    if (value === 'NOT VISIBLE') {
+      return (
+        <div className="flex items-center space-x-2">
+          <EyeOff className="text-gray-400" size={16} />
+          <span className="text-gray-400 italic">Not visible in chart</span>
+        </div>
+      )
+    }
+    return <span className="text-white font-semibold">{value}</span>
   }
 
   const containerVariants = {
@@ -81,6 +101,9 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
     hidden: { opacity: 0, x: -20 },
     visible: { opacity: 1, x: 0 }
   }
+
+  // Check if any data was successfully extracted
+  const hasValidData = Object.values(analysis).some(value => value !== 'NOT VISIBLE')
 
   return (
     <motion.div
@@ -107,12 +130,12 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
         <div className="result-code rounded-lg p-4 font-mono text-sm space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-white/70">PAIR:</span>
-            <span className="text-white font-semibold">{analysis.PAIR}</span>
+            {getValueDisplay(analysis.PAIR, 'PAIR')}
           </div>
           
           <div className="flex items-center justify-between">
             <span className="text-white/70">TIMEFRAME:</span>
-            <span className="text-white font-semibold">{analysis.TIMEFRAME}</span>
+            {getValueDisplay(analysis.TIMEFRAME, 'TIMEFRAME')}
           </div>
           
           <div className="flex items-center justify-between">
@@ -120,7 +143,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
             <div className="flex items-center space-x-2">
               {getTrendIcon(analysis.TREND)}
               <span className={`font-semibold ${getTrendClass(analysis.TREND)}`}>
-                {analysis.TREND}
+                {analysis.TREND === 'NOT VISIBLE' ? 'Not visible' : analysis.TREND}
               </span>
             </div>
           </div>
@@ -130,7 +153,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
             <div className="flex items-center space-x-2">
               {getSignalIcon(analysis.SIGNAL)}
               <span className={`font-semibold ${getSignalClass(analysis.SIGNAL)}`}>
-                {analysis.SIGNAL}
+                {analysis.SIGNAL === 'NOT VISIBLE' ? 'Not visible' : analysis.SIGNAL}
               </span>
             </div>
           </div>
@@ -138,25 +161,47 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       </motion.div>
 
       {/* Signal Summary */}
-      <motion.div
-        variants={itemVariants}
-        className="glassmorphism rounded-xl p-4"
-      >
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-white mb-2">
-            Trading Signal
-          </h3>
-          <div className="flex items-center justify-center space-x-3">
-            {getSignalIcon(analysis.SIGNAL)}
-            <span className={`text-xl font-bold ${getSignalClass(analysis.SIGNAL)}`}>
-              {analysis.SIGNAL}
-            </span>
+      {hasValidData && (
+        <motion.div
+          variants={itemVariants}
+          className="glassmorphism rounded-xl p-4"
+        >
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Trading Signal
+            </h3>
+            <div className="flex items-center justify-center space-x-3">
+              {getSignalIcon(analysis.SIGNAL)}
+              <span className={`text-xl font-bold ${getSignalClass(analysis.SIGNAL)}`}>
+                {analysis.SIGNAL === 'NOT VISIBLE' ? 'Not visible' : analysis.SIGNAL}
+              </span>
+            </div>
+            <p className="text-white/70 text-sm mt-2">
+              Based on {analysis.PAIR !== 'NOT VISIBLE' ? analysis.PAIR : 'chart'} {analysis.TIMEFRAME !== 'NOT VISIBLE' ? analysis.TIMEFRAME : ''} analysis
+            </p>
           </div>
-          <p className="text-white/70 text-sm mt-2">
-            Based on {analysis.PAIR} {analysis.TIMEFRAME} analysis
-          </p>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
+
+      {/* Warning if no data was extracted */}
+      {!hasValidData && (
+        <motion.div
+          variants={itemVariants}
+          className="glassmorphism rounded-xl p-4 border border-yellow-500/30"
+        >
+          <div className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <EyeOff className="text-yellow-400" size={20} />
+              <h3 className="text-lg font-semibold text-yellow-400">
+                Limited Analysis
+              </h3>
+            </div>
+            <p className="text-white/70 text-sm">
+              Could not extract trading information from the chart. Please ensure the image is clear and contains visible trading data.
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Action Button */}
       <motion.div

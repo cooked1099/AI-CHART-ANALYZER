@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BarChart3, Zap, Shield, Brain, Sparkles, TrendingUp, Eye, Cpu } from 'lucide-react'
+import { BarChart3, Zap, Shield, Brain, Sparkles, TrendingUp, Eye, Cpu, AlertCircle } from 'lucide-react'
 import FileUpload from '../components/FileUpload'
 import AnalysisResult from '../components/AnalysisResult'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -15,22 +15,24 @@ interface AnalysisData {
 }
 
 interface DebugInfo {
-  usedDefaults?: boolean
   originalResponse?: string
   parsedResult?: any
+  hasValidData?: boolean
 }
 
-type AppState = 'upload' | 'loading' | 'result'
+type AppState = 'upload' | 'loading' | 'result' | 'error'
 
 export default function Home() {
   const [appState, setAppState] = useState<AppState>('upload')
   const [analysisResult, setAnalysisResult] = useState<AnalysisData | null>(null)
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null)
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleFileSelect = async (file: File) => {
     setAppState('loading')
     setDebugInfo(null)
+    setErrorMessage(null)
 
     // Create a preview of the uploaded image
     const imageUrl = URL.createObjectURL(file)
@@ -47,32 +49,22 @@ export default function Home() {
 
       const data = await response.json()
 
-      // Always treat as success - no error handling
-      if (data.analysis) {
+      if (!response.ok) {
+        throw new Error(data.error || 'Analysis failed')
+      }
+
+      if (data.success && data.analysis) {
         setAnalysisResult(data.analysis)
         setDebugInfo(data.debug || null)
+        setAppState('result')
       } else {
-        // Create a default analysis if none provided
-        setAnalysisResult({
-          PAIR: 'BTC/USDT',
-          TIMEFRAME: 'H1',
-          TREND: 'Bullish',
-          SIGNAL: 'UP'
-        })
-        setDebugInfo({ usedDefaults: true, originalResponse: 'No analysis provided' })
+        throw new Error(data.error || 'No analysis data received')
       }
       
-      setAppState('result')
     } catch (error) {
-      // Never show errors - always show a result
-      setAnalysisResult({
-        PAIR: 'BTC/USDT',
-        TIMEFRAME: 'H1',
-        TREND: 'Bullish',
-        SIGNAL: 'UP'
-      })
-      setDebugInfo({ usedDefaults: true, originalResponse: 'Error occurred' })
-      setAppState('result')
+      console.error('Analysis error:', error)
+      setErrorMessage(error instanceof Error ? error.message : 'An unexpected error occurred')
+      setAppState('error')
     }
   }
 
@@ -80,10 +72,16 @@ export default function Home() {
     setAppState('upload')
     setAnalysisResult(null)
     setDebugInfo(null)
+    setErrorMessage(null)
     if (uploadedImage) {
       URL.revokeObjectURL(uploadedImage)
       setUploadedImage(null)
     }
+  }
+
+  const handleRetry = () => {
+    setAppState('upload')
+    setErrorMessage(null)
   }
 
   return (
@@ -246,6 +244,56 @@ export default function Home() {
                 </motion.div>
               )}
 
+              {appState === 'error' && (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                  transition={{ duration: 0.5 }}
+                  className="glassmorphism-strong rounded-3xl p-8 max-w-2xl mx-auto"
+                >
+                  <div className="text-center space-y-6">
+                    <div className="flex items-center justify-center space-x-3">
+                      <AlertCircle size={48} className="text-red-400" />
+                      <h2 className="text-2xl font-bold text-white">Analysis Failed</h2>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <p className="text-white/80 text-lg">
+                        {errorMessage || 'An error occurred during analysis'}
+                      </p>
+                      
+                      {uploadedImage && (
+                        <div className="mt-6">
+                          <h3 className="text-white font-semibold mb-3">Uploaded Image:</h3>
+                          <img 
+                            src={uploadedImage} 
+                            alt="Trading Chart" 
+                            className="w-full h-auto rounded-2xl shadow-2xl border border-white/10 max-h-64 object-contain"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <button
+                        onClick={handleRetry}
+                        className="px-8 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105"
+                      >
+                        Try Again
+                      </button>
+                      <button
+                        onClick={handleNewAnalysis}
+                        className="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105"
+                      >
+                        Upload New Image
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {appState === 'result' && analysisResult && (
                 <motion.div
                   key="result"
@@ -304,17 +352,17 @@ export default function Home() {
                     >
                       <div className="flex items-center space-x-3 mb-6">
                         <Cpu size={24} className="text-purple-300" />
-                        <h3 className="text-xl font-bold text-white">Debug Information</h3>
+                        <h3 className="text-xl font-bold text-white">Analysis Details</h3>
                       </div>
                       <div className="space-y-4 text-sm">
                         <div className="flex items-center space-x-4">
-                          <span className="text-white/70 font-medium">Used Defaults:</span>
+                          <span className="text-white/70 font-medium">Valid Data Extracted:</span>
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            debugInfo.usedDefaults 
-                              ? 'bg-red-500/20 text-red-300 border border-red-500/30' 
-                              : 'bg-green-500/20 text-green-300 border border-green-500/30'
+                            debugInfo.hasValidData 
+                              ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                              : 'bg-red-500/20 text-red-300 border border-red-500/30'
                           }`}>
-                            {debugInfo.usedDefaults ? 'Yes' : 'No'}
+                            {debugInfo.hasValidData ? 'Yes' : 'No'}
                           </span>
                         </div>
                         {debugInfo.originalResponse && (

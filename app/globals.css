@@ -93,3 +93,16 @@ body {
 .trend-sideways {
   color: #4ECDC4;
 }
+
+/* Trading color classes */
+.text-trading-green {
+  color: #00D4AA;
+}
+
+.text-trading-red {
+  color: #FF6B6B;
+}
+
+.text-trading-blue {
+  color: #4ECDC4;
+}
