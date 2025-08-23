@@ -18,7 +18,7 @@ body {
 }
 
 body {
-  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 25%, #dc2626 75%, #ea580c 100%);
+  background: linear-gradient(135deg, #581c87 0%, #7c3aed 50%, #581c87 100%);
   min-height: 100vh;
   color: white;
 }
@@ -48,8 +48,8 @@ body {
 }
 
 .upload-area.dragover {
-  border-color: #f97316;
-  background: rgba(249, 115, 22, 0.1);
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.1);
 }
 
 .result-code {
@@ -60,7 +60,7 @@ body {
 
 .loading-spinner {
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #f97316;
+  border-top: 3px solid #a855f7;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -102,10 +102,10 @@ body {
 /* Enhanced animations */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
   }
   50% {
-    box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.6);
   }
 }
 
@@ -138,12 +138,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(239, 68, 68, 0.5);
+  background: rgba(168, 85, 247, 0.5);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(239, 68, 68, 0.7);
+  background: rgba(168, 85, 247, 0.7);
 }
 
 /* Enhanced button hover effects */
@@ -153,7 +153,7 @@ body {
 
 /* Text gradient animations */
 .text-gradient-animate {
-  background: linear-gradient(90deg, #ffffff, #f97316, #ef4444, #f97316, #ffffff);
+  background: linear-gradient(90deg, #ffffff, #a855f7, #ec4899, #a855f7, #ffffff);
   background-size: 200% 100%;
   animation: shimmer 3s infinite;
   -webkit-background-clip: text;

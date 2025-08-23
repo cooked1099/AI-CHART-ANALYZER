@@ -169,7 +169,7 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ analysis, onNewAnalysis
       >
         <button
           onClick={onNewAnalysis}
-          className="bg-gradient-to-r from-sky-500 to-red-500 hover:from-red-500 hover:to-sky-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-pink-500 hover:to-purple-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
         >
           New Analysis
         </button>

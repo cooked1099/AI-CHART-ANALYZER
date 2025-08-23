@@ -26,7 +26,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           className="w-20 h-20 mx-auto"
         >
-          <div className="w-full h-full border-4 border-white/10 border-t-sky-500 rounded-full" />
+          <div className="w-full h-full border-4 border-white/10 border-t-purple-500 rounded-full" />
         </motion.div>
         
         <motion.div
@@ -34,7 +34,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           transition={{ duration: 2, repeat: Infinity }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <BarChart3 size={32} className="text-sky-400" />
+          <BarChart3 size={32} className="text-purple-400" />
         </motion.div>
       </div>
 
@@ -62,7 +62,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
               repeat: Infinity,
               delay: index * 0.2
             }}
-            className="w-2 h-2 bg-sky-400 rounded-full"
+            className="w-2 h-2 bg-purple-400 rounded-full"
           />
         ))}
       </div>
