@@ -2,10 +2,9 @@
   "name": "netlify-functions",
   "version": "1.0.0",
   "description": "Netlify functions for AI Chart Analyzer",
-  "main": "index.js",
-  "type": "module",
+  "main": "analyze.js",
   "dependencies": {
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "formidable": "^3.5.1"
   },
   "devDependencies": {},

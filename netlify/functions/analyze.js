@@ -1,8 +1,9 @@
-import fetch from "node-fetch";
-import formidable from "formidable";
-import { readFileSync } from "fs";
+const fetch = require("node-fetch");
+const formidable = require("formidable");
+const { readFileSync } = require("fs");
+const { Buffer } = require("buffer");
 
-export async function handler(event, context) {
+exports.handler = async (event, context) => {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -41,77 +42,80 @@ export async function handler(event, context) {
 
     // Only accept POST requests
     if (event.httpMethod !== 'POST') {
-      return {
+        return {
         statusCode: 405,
-        headers,
-        body: JSON.stringify({
-          success: false,
+          headers,
+          body: JSON.stringify({
+            success: false,
           error: 'Method not allowed. Use POST.',
-          analysis: null
-        })
-      };
-    }
+            analysis: null
+          })
+        };
+      }
 
     // Check if request has multipart form data
     const contentType = event.headers['content-type'] || '';
     if (!contentType.includes('multipart/form-data')) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          success: false,
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
           error: 'Content-Type must be multipart/form-data',
-          analysis: null
-        })
-      };
-    }
+            analysis: null
+          })
+        };
+      }
 
     // Parse multipart form data using formidable
     const parseForm = () => {
       return new Promise((resolve, reject) => {
-        // Convert body from base64 if it's encoded
-        let bodyBuffer;
-        if (event.isBase64Encoded) {
-          bodyBuffer = Buffer.from(event.body, 'base64');
-        } else {
-          bodyBuffer = Buffer.from(event.body, 'utf8');
-        }
-
-        // Create a temporary mock request object for formidable
-        const mockReq = {
-          headers: event.headers,
-          method: event.httpMethod,
-          url: event.path,
-          pipe: (stream) => {
-            stream.write(bodyBuffer);
-            stream.end();
-          },
-          unpipe: () => {},
-          on: (event, callback) => {
-            if (event === 'data') {
-              callback(bodyBuffer);
-            } else if (event === 'end') {
-              callback();
-            }
-          },
-          read: () => bodyBuffer,
-          readable: true
-        };
-
-        const form = formidable({
-          maxFileSize: 10 * 1024 * 1024, // 10MB limit
-          allowEmptyFiles: false,
-          minFileSize: 1024, // 1KB minimum
-        });
-
-        form.parse(mockReq, (err, fields, files) => {
-          if (err) {
-            console.error('Formidable parse error:', err);
-            reject(err);
-            return;
+        try {
+          // Convert body from base64 if it's encoded
+          let bodyBuffer;
+          if (event.isBase64Encoded) {
+            bodyBuffer = Buffer.from(event.body, 'base64');
+          } else {
+            bodyBuffer = Buffer.from(event.body, 'utf8');
           }
-          resolve({ fields, files });
-        });
+
+          console.log('Body buffer length:', bodyBuffer.length);
+
+          // Create a more compatible mock request object for formidable
+          const { Readable } = require('stream');
+          const mockReq = new Readable({
+            read() {
+              this.push(bodyBuffer);
+              this.push(null); // End the stream
+            }
+          });
+
+          // Add required properties
+          mockReq.headers = event.headers;
+          mockReq.method = event.httpMethod;
+          mockReq.url = event.path;
+
+          const form = formidable({
+            maxFileSize: 10 * 1024 * 1024, // 10MB limit
+            allowEmptyFiles: false,
+            minFileSize: 100, // 100 bytes minimum
+            keepExtensions: true,
+            multiples: false
+          });
+
+          form.parse(mockReq, (err, fields, files) => {
+            if (err) {
+              console.error('Formidable parse error:', err);
+              reject(new Error(`Form parsing failed: ${err.message}`));
+              return;
+            }
+            console.log('Form parsed successfully. Files:', Object.keys(files));
+            resolve({ fields, files });
+          });
+        } catch (error) {
+          console.error('Parse form setup error:', error);
+          reject(new Error(`Parse setup failed: ${error.message}`));
+        }
       });
     };
 
@@ -136,16 +140,16 @@ export async function handler(event, context) {
     // Check if file was uploaded
     const fileKey = Object.keys(files)[0];
     if (!fileKey || !files[fileKey]) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          success: false,
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
           error: 'No file found in request. Please upload an image file.',
-          analysis: null
-        })
-      };
-    }
+            analysis: null
+          })
+        };
+      }
 
     const uploadedFile = Array.isArray(files[fileKey]) ? files[fileKey][0] : files[fileKey];
     

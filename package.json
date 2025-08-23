@@ -15,7 +15,9 @@
     "react-dom": "^18.2.0",
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.263.1",
-    "openai": "^4.20.1"
+    "openai": "^4.20.1",
+    "formidable": "^3.5.1",
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",
