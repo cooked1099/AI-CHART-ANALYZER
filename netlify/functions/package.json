@@ -5,7 +5,7 @@
   "main": "analyze.js",
   "dependencies": {
     "node-fetch": "^2.7.0",
-    "formidable": "^3.5.1"
+    "formidable": "^3.5.0"
   },
   "devDependencies": {},
   "scripts": {

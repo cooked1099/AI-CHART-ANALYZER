@@ -1,7 +1,6 @@
 const fetch = require("node-fetch");
 const formidable = require("formidable");
 const { readFileSync } = require("fs");
-const { Buffer } = require("buffer");
 
 exports.handler = async (event, context) => {
   // Enable CORS
@@ -23,7 +22,19 @@ exports.handler = async (event, context) => {
   try {
     console.log('Function triggered with method:', event.httpMethod);
     console.log('Content-Type:', event.headers['content-type']);
-    console.log('Body length:', event.body ? event.body.length : 0);
+
+    // Check if method is POST
+    if (event.httpMethod !== 'POST') {
+      return {
+        statusCode: 405,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Method not allowed. Use POST method.',
+          analysis: null
+        })
+      };
+    }
 
     // Check if OpenAI API key is available
     const openaiApiKey = process.env.OPENAI_API_KEY || process.env.API_KEY;
@@ -34,24 +45,11 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           success: false,
-          error: 'OpenAI API key not configured. Please set OPENAI_API_KEY or API_KEY environment variable.',
+          error: 'OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.',
           analysis: null
         })
       };
     }
-
-    // Only accept POST requests
-    if (event.httpMethod !== 'POST') {
-        return {
-        statusCode: 405,
-          headers,
-          body: JSON.stringify({
-            success: false,
-          error: 'Method not allowed. Use POST.',
-            analysis: null
-          })
-        };
-      }
 
     // Check if request has multipart form data
     const contentType = event.headers['content-type'] || '';
@@ -68,91 +66,111 @@ exports.handler = async (event, context) => {
       }
 
     // Parse multipart form data using formidable
-    const parseForm = () => {
+    const parseFormData = async () => {
       return new Promise((resolve, reject) => {
         try {
-          // Convert body from base64 if it's encoded
+          // Convert body from base64 if needed
           let bodyBuffer;
           if (event.isBase64Encoded) {
             bodyBuffer = Buffer.from(event.body, 'base64');
           } else {
-            bodyBuffer = Buffer.from(event.body, 'utf8');
+            bodyBuffer = Buffer.from(event.body, 'utf-8');
           }
 
-          console.log('Body buffer length:', bodyBuffer.length);
+          console.log('Body buffer size:', bodyBuffer.length);
 
-          // Create a more compatible mock request object for formidable
+          // Create a readable stream from the buffer
           const { Readable } = require('stream');
-          const mockReq = new Readable({
+          const stream = new Readable({
             read() {
               this.push(bodyBuffer);
-              this.push(null); // End the stream
+              this.push(null);
             }
           });
 
-          // Add required properties
-          mockReq.headers = event.headers;
-          mockReq.method = event.httpMethod;
-          mockReq.url = event.path;
+          // Set required headers on the stream
+          stream.headers = event.headers;
+          stream.method = event.httpMethod;
+          stream.url = event.path || '/';
 
+          // Create formidable form
           const form = formidable({
             maxFileSize: 10 * 1024 * 1024, // 10MB limit
             allowEmptyFiles: false,
-            minFileSize: 100, // 100 bytes minimum
             keepExtensions: true,
-            multiples: false
           });
 
-          form.parse(mockReq, (err, fields, files) => {
+          // Parse the form
+          form.parse(stream, (err, fields, files) => {
             if (err) {
               console.error('Formidable parse error:', err);
-              reject(new Error(`Form parsing failed: ${err.message}`));
+              reject(new Error(`Failed to parse form data: ${err.message}`));
               return;
             }
-            console.log('Form parsed successfully. Files:', Object.keys(files));
+
+            console.log('Form parsed successfully');
+            console.log('Fields:', Object.keys(fields));
+            console.log('Files:', Object.keys(files));
+
             resolve({ fields, files });
           });
+
         } catch (error) {
-          console.error('Parse form setup error:', error);
+          console.error('Parse setup error:', error);
           reject(new Error(`Parse setup failed: ${error.message}`));
         }
       });
     };
 
+    // Parse the form data
     let files, fields;
     try {
-      const parsed = await parseForm();
+      const parsed = await parseFormData();
       files = parsed.files;
       fields = parsed.fields;
     } catch (parseError) {
       console.error('Error parsing form data:', parseError);
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          success: false,
-          error: 'Failed to parse form data: ' + parseError.message,
-          analysis: null
-        })
-      };
-    }
-
-    // Check if file was uploaded
-    const fileKey = Object.keys(files)[0];
-    if (!fileKey || !files[fileKey]) {
         return {
           statusCode: 400,
           headers,
           body: JSON.stringify({
             success: false,
-          error: 'No file found in request. Please upload an image file.',
+          error: 'Failed to parse file',
             analysis: null
           })
         };
       }
 
+    // Check if file was uploaded
+    const fileKeys = Object.keys(files);
+    if (fileKeys.length === 0) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'No file uploaded',
+          analysis: null
+        })
+      };
+    }
+
+    // Get the uploaded file
+    const fileKey = fileKeys[0];
     const uploadedFile = Array.isArray(files[fileKey]) ? files[fileKey][0] : files[fileKey];
-    
+
+    if (!uploadedFile || !uploadedFile.filepath) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
+          error: 'No file uploaded',
+            analysis: null
+          })
+        };
+      }
+
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(uploadedFile.mimetype)) {
@@ -174,7 +192,7 @@ exports.handler = async (event, context) => {
       path: uploadedFile.filepath
     });
 
-    // Read and convert file to base64
+    // Read file content
     let fileBuffer;
     try {
       fileBuffer = readFileSync(uploadedFile.filepath);
@@ -191,6 +209,7 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // Convert to base64 for OpenAI
     const base64Data = `data:${uploadedFile.mimetype};base64,${fileBuffer.toString('base64')}`;
     console.log('File converted to base64, length:', base64Data.length);
 
@@ -212,26 +231,22 @@ exports.handler = async (event, context) => {
     - Look for text like "BTC/USDT", "EUR/USD", "USD/MXN", "GBP/JPY", etc.
     - Check for any currency pair indicators or labels
     - Look in the top-left, top-right, center-top, or any visible text areas
-    - For Quotex charts, look for pairs like "USD/MXN (OTC)", "EUR/USD", etc.
 
     TIMEFRAME DETECTION:
     - Look for timeframe selectors or buttons (M1, M5, M15, M30, H1, H4, D1, W1)
     - Check the chart toolbar, time selector, or any highlighted timeframe
     - Look at the x-axis labels or chart settings
-    - Search for any time-related indicators or buttons
 
     TREND ANALYSIS:
     - Examine the actual candlestick patterns and recent price movement
     - Look at the direction of the most recent candles (last 5-10 candles)
     - Check if the overall price movement is upward, downward, or sideways
     - Consider any visible moving averages, trend lines, or indicators
-    - Analyze the candlestick body colors (green/red for bullish/bearish)
 
     SIGNAL PREDICTION:
     - Based on the current chart patterns, predict the likely direction of the next candle
     - Consider recent candlestick formations and momentum
     - Look at support/resistance levels if visible
-    - Analyze the overall market sentiment from the chart
 
     RESPONSE FORMAT:
     Return your analysis in this exact format:
@@ -245,13 +260,14 @@ exports.handler = async (event, context) => {
     - If you cannot see the timeframe, write "Not visible"
     - For TREND and SIGNAL, always provide your analysis based on the visible chart patterns
     - Be honest about what you can and cannot see in the image
-    - Do not use placeholder or default values unless absolutely necessary
     `;
 
     console.log('Calling OpenAI API...');
 
     // Call OpenAI Vision API
-    const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+    let openaiResponse;
+    try {
+      openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${openaiApiKey}`,
@@ -280,6 +296,18 @@ exports.handler = async (event, context) => {
         temperature: 0.1
       })
     });
+    } catch (fetchError) {
+      console.error('Fetch error:', fetchError);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Failed to connect to AI service',
+          analysis: null
+        })
+      };
+    }
 
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
@@ -289,7 +317,7 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           success: false,
-          error: `OpenAI API error: ${openaiResponse.status} - ${errorText}`,
+          error: `AI service error: ${openaiResponse.status} - ${errorText}`,
           analysis: null
         })
       };
@@ -371,6 +399,7 @@ exports.handler = async (event, context) => {
 
     console.log('Final Result:', result, 'Has valid data:', hasValidData);
 
+    // Return successful response
     return {
       statusCode: 200,
       headers,
@@ -406,4 +435,4 @@ exports.handler = async (event, context) => {
       })
     };
   }
-}
+};

@@ -103,6 +103,11 @@ OPENAI_API_KEY=your_openai_api_key_here
 - **Check**: File type (must be image), file size (<10MB), FormData structure
 - **Debug**: Check browser console for detailed error messages
 
+### "formidable is not a function" Error
+- **Cause**: Incorrect formidable import or usage
+- **Fixed**: Using `const form = formidable()` instead of calling as constructor
+- **Solution**: Updated to proper CommonJS require syntax
+
 ### 404 Not Found
 - **Cause**: Function not deployed or wrong URL
 - **Check**: Function exists in `netlify/functions/analyze.js`
