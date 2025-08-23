@@ -41,10 +41,50 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    // Parse multipart form data
-    const boundary = event.headers['content-type'].split('boundary=')[1];
+    // Check if content-type header exists
+    if (!event.headers || !event.headers['content-type']) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Content-Type header is missing',
+          analysis: null
+        })
+      };
+    }
+
+    // Parse multipart form data with better error handling
+    const contentType = event.headers['content-type'];
+    const boundaryMatch = contentType.match(/boundary=(.+)$/);
+    
+    if (!boundaryMatch) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Invalid multipart form data: boundary not found',
+          analysis: null
+        })
+      };
+    }
+
+    const boundary = boundaryMatch[1];
     const body = event.body;
     
+    if (!body) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'No request body provided',
+          analysis: null
+        })
+      };
+    }
+
     // Simple multipart parsing for the file
     const parts = body.split('--' + boundary);
     let fileData = null;
@@ -91,7 +131,7 @@ exports.handler = async (event, context) => {
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           success: false,
-          error: 'No file data provided',
+          error: 'No file data found in request',
           analysis: null
         })
       };
@@ -99,8 +139,34 @@ exports.handler = async (event, context) => {
 
     console.log('File received:', fileName, fileType, fileData.length);
 
+    // Validate file data
+    if (fileData.length === 0) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'File data is empty',
+          analysis: null
+        })
+      };
+    }
+
     // Convert base64 to buffer
-    const buffer = Buffer.from(fileData, 'base64');
+    let buffer;
+    try {
+      buffer = Buffer.from(fileData, 'base64');
+    } catch (error) {
+      return {
+        statusCode: 400,
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          success: false,
+          error: 'Invalid file data format',
+          analysis: null
+        })
+      };
+    }
 
     console.log('Image converted to base64, length:', fileData.length);
 

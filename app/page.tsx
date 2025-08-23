@@ -75,12 +75,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-sky-500 via-blue-500 to-red-600 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-red-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-yellow-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-20 left-20 w-72 h-72 bg-sky-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-red-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       {/* Floating Particles */}
@@ -88,7 +88,7 @@ export default function Home() {
         {[...Array(30)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-red-400/30 rounded-full"
+            className="absolute w-2 h-2 bg-white/30 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -124,14 +124,14 @@ export default function Home() {
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
                   className="relative"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-orange-400 rounded-2xl blur-lg opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-red-400 rounded-2xl blur-lg opacity-60"></div>
                   <BarChart3 size={48} className="relative text-white" />
                 </motion.div>
                 <div>
-                  <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-red-200 to-orange-200 bg-clip-text text-transparent">
+                  <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-sky-200 to-red-200 bg-clip-text text-transparent">
                     Trading Chart
                   </h1>
-                  <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-orange-200 to-red-200 bg-clip-text text-transparent">
+                  <h2 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-red-200 to-sky-200 bg-clip-text text-transparent">
                     Analyzer
                   </h2>
                 </div>
@@ -144,7 +144,7 @@ export default function Home() {
                 className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed"
               >
                 AI-powered analysis of trading charts with instant pair detection, 
-                <span className="text-orange-300 font-semibold"> trend analysis</span>, and 
+                <span className="text-sky-300 font-semibold"> trend analysis</span>, and 
                 <span className="text-red-300 font-semibold"> trading signals</span>
               </motion.p>
             </motion.div>
@@ -161,8 +161,8 @@ export default function Home() {
                 className="glassmorphism-strong rounded-2xl p-6 text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                  <Brain size={32} className="relative text-orange-300 mx-auto" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-sky-500 to-blue-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                  <Brain size={32} className="relative text-sky-300 mx-auto" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">AI Analysis</h3>
                 <p className="text-white/70 text-sm">Advanced pattern recognition with GPT-4 Vision</p>
@@ -173,8 +173,8 @@ export default function Home() {
                 className="glassmorphism-strong rounded-2xl p-6 text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                  <Zap size={32} className="relative text-yellow-300 mx-auto" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                  <Zap size={32} className="relative text-blue-300 mx-auto" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Instant Results</h3>
                 <p className="text-white/70 text-sm">Real-time processing in seconds</p>
@@ -185,7 +185,7 @@ export default function Home() {
                 className="glassmorphism-strong rounded-2xl p-6 text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-red-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
                   <Shield size={32} className="relative text-red-300 mx-auto" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Secure</h3>
@@ -197,8 +197,8 @@ export default function Home() {
                 className="glassmorphism-strong rounded-2xl p-6 text-center group"
               >
                 <div className="relative mb-4">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                  <Sparkles size={32} className="relative text-pink-300 mx-auto" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                  <Sparkles size={32} className="relative text-orange-300 mx-auto" />
                 </div>
                 <h3 className="font-bold text-white text-lg mb-2">Smart</h3>
                 <p className="text-white/70 text-sm">Intelligent chart pattern detection</p>
@@ -253,7 +253,7 @@ export default function Home() {
                   </p>
                   <button
                     onClick={handleNewAnalysis}
-                    className="bg-gradient-to-r from-red-500 to-orange-500 hover:from-orange-500 hover:to-red-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    className="bg-gradient-to-r from-sky-500 to-red-500 hover:from-red-500 hover:to-sky-500 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                   >
                     Try Again
                   </button>
@@ -280,7 +280,7 @@ export default function Home() {
                         className="glassmorphism-strong rounded-3xl p-6"
                       >
                         <div className="flex items-center space-x-3 mb-6">
-                          <Eye size={24} className="text-orange-300" />
+                          <Eye size={24} className="text-sky-300" />
                           <h3 className="text-xl font-bold text-white">Uploaded Chart</h3>
                         </div>
                         <div className="relative">
@@ -317,7 +317,7 @@ export default function Home() {
                       className="glassmorphism-strong rounded-3xl p-8"
                     >
                       <div className="flex items-center space-x-3 mb-6">
-                        <Cpu size={24} className="text-red-300" />
+                        <Cpu size={24} className="text-blue-300" />
                         <h3 className="text-xl font-bold text-white">Analysis Details</h3>
                       </div>
                       <div className="space-y-4 text-sm">
@@ -367,9 +367,9 @@ export default function Home() {
             >
               <p className="text-white/70 text-lg">
                 © 2024 Trading Chart Analyzer. Built with 
-                <span className="text-orange-300 font-semibold mx-1">Next.js</span>, 
-                <span className="text-red-300 font-semibold mx-1">OpenAI</span>, and 
-                <span className="text-yellow-300 font-semibold mx-1">Tailwind CSS</span>.
+                <span className="text-sky-300 font-semibold mx-1">Next.js</span>, 
+                <span className="text-blue-300 font-semibold mx-1">OpenAI</span>, and 
+                <span className="text-red-300 font-semibold mx-1">Tailwind CSS</span>.
               </p>
               <p className="text-white/50 text-sm max-w-2xl mx-auto">
                 This tool is for educational purposes only. Always do your own research before making trading decisions. 
