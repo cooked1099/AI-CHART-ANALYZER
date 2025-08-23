@@ -56,21 +56,37 @@ exports.handler = async (event, context) => {
 
     // Parse multipart form data with better error handling
     const contentType = event.headers['content-type'];
-    const boundaryMatch = contentType.match(/boundary=(.+)$/);
+    console.log('Content-Type:', contentType);
     
-    if (!boundaryMatch) {
+    // Handle both multipart/form-data and application/x-www-form-urlencoded
+    let boundary = null;
+    
+    if (contentType.includes('multipart/form-data')) {
+      const boundaryMatch = contentType.match(/boundary=(.+)$/);
+      if (!boundaryMatch) {
+        return {
+          statusCode: 400,
+          headers: { ...headers, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            success: false,
+            error: 'Invalid multipart form data: boundary not found',
+            analysis: null
+          })
+        };
+      }
+      boundary = boundaryMatch[1];
+    } else {
       return {
         statusCode: 400,
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           success: false,
-          error: 'Invalid multipart form data: boundary not found',
+          error: 'Expected multipart/form-data content type',
           analysis: null
         })
       };
     }
 
-    const boundary = boundaryMatch[1];
     const body = event.body;
     
     if (!body) {
@@ -84,6 +100,9 @@ exports.handler = async (event, context) => {
         })
       };
     }
+
+    console.log('Body length:', body.length);
+    console.log('Boundary:', boundary);
 
     // Simple multipart parsing for the file
     const parts = body.split('--' + boundary);
