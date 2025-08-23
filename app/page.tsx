@@ -42,13 +42,43 @@ export default function Home() {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await fetch('/.netlify/functions/analyze', {
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type header - let the browser set it automatically for FormData
-      })
+      // Try multiple endpoints for different deployment scenarios
+      const endpoints = [
+        '/.netlify/functions/analyze',
+        '/api/analyze',
+        '/analyze'
+      ]
+
+      let response = null
+      let lastError = null
+
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Trying endpoint: ${endpoint}`)
+          response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+          })
+          
+          if (response.ok) {
+            console.log(`Success with endpoint: ${endpoint}`)
+            break
+          } else {
+            console.log(`Failed with endpoint: ${endpoint}, status: ${response.status}`)
+            lastError = `HTTP ${response.status}: ${response.statusText}`
+          }
+        } catch (error) {
+          console.log(`Error with endpoint: ${endpoint}`, error)
+          lastError = error instanceof Error ? error.message : 'Unknown error'
+        }
+      }
+
+      if (!response || !response.ok) {
+        throw new Error(lastError || 'All endpoints failed')
+      }
 
       const data = await response.json()
+      console.log('Response data:', data)
 
       if (data.success && data.analysis) {
         setAnalysisResult(data.analysis)
@@ -60,7 +90,8 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Upload error:', error)
-      setErrorMessage('Network error. Please check your connection and try again.')
+      const errorMsg = error instanceof Error ? error.message : 'Network error'
+      setErrorMessage(`Upload failed: ${errorMsg}. Please check your connection and try again.`)
       setAppState('error')
     }
   }
